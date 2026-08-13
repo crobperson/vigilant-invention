@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8" /><title>Wave Trainer</title
+  ><meta content="width=device-width,initial-scale=1" name="viewport" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    @import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap);:root{--primary:#ffffff;--secondary:#71717a;--accent:#ffffff;--bg-dark:rgba(0, 0, 0, 0.95)}body{margin:0;background:#000;overflow:hidden;height:100vh;display:flex;justify-content:center;align-items:center;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none;color:#fff}canvas{display:block;position:absolute;top:0;left:0;z-index:0}#ui-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;justify-content:center;align-items:center;z-index:10}.screen{pointer-events:auto;background:var(--bg-dark);border:1px solid var(--primary);padding:40px;text-align:center;display:none;flex-direction:column;gap:25px;min-width:450px;border-radius:0;will-change:transform,opacity}@keyframes slowFadeIn{from{opacity:0}to{opacity:1}}.first-fade{animation:slowFadeIn 2s ease forwards!important}#loading-screen{position:absolute;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000;transition:opacity .5s}#loading-screen h1{font-size:32px;font-weight:900;margin:0;color:var(--primary);letter-spacing:4px;text-transform:uppercase}#loading-screen p{font-size:14px;color:#a1a1aa;margin-top:15px;letter-spacing:2px}h1{font-size:32px;font-weight:900;margin:0;color:var(--primary);letter-spacing:4px;text-transform:uppercase}h2{font-size:14px;font-weight:700;color:#fff;margin:0;letter-spacing:2px;text-transform:uppercase}p{font-size:11px;color:#a1a1aa;margin:0;letter-spacing:1px;text-transform:uppercase}button{font-family:Inter,sans-serif;font-weight:700;background:0 0;color:#fff;border:1px solid #fff;padding:14px 20px;font-size:12px;letter-spacing:2px;cursor:pointer;transition:background .15s,color .15s;text-transform:uppercase}button:hover{background:#fff;color:#000}button:active{transform:scale(.98)}.btn-main{background:#fff;color:#000;border-color:#fff}.btn-main:hover{background:#e4e4e7;color:#000;border-color:#e4e4e7}.btn-accent{background:var(--accent);color:#000;border-color:var(--accent)}.btn-accent:hover{background:#e4e4e7;border-color:#e4e4e7;color:#000}.control-group{background:rgba(255,255,255,.02);padding:20px;border-radius:0;border:1px solid rgba(255,255,255,.1);text-align:left}.control-group p{color:#fff;margin-bottom:14px;text-align:center;font-weight:700}.slider-row{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:11px;letter-spacing:1px}.slider-label{color:#a1a1aa;min-width:95px}.slider-val{color:#fff;min-width:18px;text-align:right;font-weight:700}input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:2px;background:rgba(255,255,255,.1);outline:0;cursor:pointer}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:0;background:#fff;cursor:pointer}input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:0;border:none;background:#fff;cursor:pointer}input[type=text]{font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;outline:0;box-sizing:border-box}input[type=text]:focus{border-color:var(--accent)!important}.toggle-btn{width:100%;font-size:11px;margin-top:12px;border-color:rgba(255,255,255,.2)}.toggle-row{display:flex;gap:10px}.toggle-row .toggle-btn{flex:1}.toggle-btn.active{background:#fff;color:#000;border-color:#fff}#settings-btn{position:absolute;top:20px;left:20px;z-index:15;pointer-events:auto;width:42px;height:42px;padding:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8);font-family:Inter,sans-serif;font-weight:900;font-size:16px;letter-spacing:0}#settings-btn:hover{transform:none}.keybind-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px}.keybind-row:first-child{margin-top:0}#btn-rebind-key{min-width:150px;font-size:11px}#btn-rebind-key.listening{background:#fff;color:#000;animation:pulseBind 1s ease-in-out infinite}@keyframes pulseBind{0%,100%{opacity:1}50%{opacity:.55}}.settings-note{font-size:9px;color:#52525b;text-align:left;line-height:1.6;margin-top:10px}#hud{position:absolute;top:20px;width:100%;display:none;justify-content:flex-end;padding:0 40px;box-sizing:border-box;pointer-events:none;z-index:5}.hud-box{background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.1);border-left:2px solid var(--primary);padding:10px 20px;min-width:90px;box-sizing:border-box}.hud-label{font-size:10px;font-weight:700;color:#a1a1aa;margin-bottom:5px;letter-spacing:1px}.hud-value{font-size:20px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;min-width:4ch;display:inline-block}#progress-bar-container{position:absolute;top:28px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:15px;z-index:5;pointer-events:none}#progress-bar-outline{border:3px solid #fff;border-radius:0;width:300px;height:16px;padding:3px;background:#000;box-sizing:content-box}#progress-bar-track{width:100%;height:100%;border-radius:0;overflow:hidden}#progress-bar-fill{background:#fff;height:100%;width:100%;transform-origin:left;transform:scaleX(0);will-change:transform}#progress-bar-text{color:#fff;font-size:24px;font-weight:900;width:70px;text-align:left;font-variant-numeric:tabular-nums;will-change:contents}#countdown-display{position:absolute;font-size:120px;font-weight:900;color:var(--primary);display:none;pointer-events:none;z-index:20}#fps-counter{position:absolute;bottom:10px;right:10px;font-size:10px;color:#52525b;z-index:100;pointer-events:none}.level-selector{display:flex;align-items:center;gap:10px;justify-content:center;margin:14px 0}.level-selector input[type=number]{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.3);color:#fff;font-family:Inter,sans-serif;font-size:30px;font-weight:900;text-align:center;width:110px;padding:8px 4px;outline:0;-moz-appearance:textfield}.level-selector input[type=number]::-webkit-inner-spin-button,.level-selector input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}.level-selector input[type=number]:focus{border-color:#fff}.lvl-btn{font-size:18px!important;padding:8px 18px!important;letter-spacing:0!important}#level-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}.lstat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:10px 14px;text-align:left}.lstat-label{font-size:9px;color:#a1a1aa;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}.lstat-value{font-size:20px;font-weight:900;color:#fff}.lstat-bar{height:3px;background:rgba(255,255,255,.1);margin-top:6px;position:relative}.lstat-bar-fill{height:100%;background:#fff;transition:width .3s}#analyze-results{margin-top:4px}.analyze-row{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;letter-spacing:1px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07)}.analyze-row:last-child{border-bottom:none}.analyze-row .ar-label{color:#a1a1aa;text-transform:uppercase}.analyze-row .ar-val{color:#fff;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}.analyze-row .ar-val .unit{font-size:9px;color:#71717a;font-weight:700;margin-left:3px;letter-spacing:1px}.analyze-note{font-size:9px;color:#52525b;line-height:1.6;margin-top:12px;text-align:left;letter-spacing:.5px}#btn-analyze{font-size:11px}
+  </style>
+  <div id="loading-screen">
+    <h1 id="loading-title">LOADING...</h1>
+    <p id="loading-text">0%</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="fps-counter">FPS: 0</div>
+  <button id="settings-btn" title="Settings">S</button>
+  <div id="progress-bar-container">
+    <div id="progress-bar-outline">
+      <div id="progress-bar-track"><div id="progress-bar-fill"></div></div>
+    </div>
+    <div id="progress-bar-text">0%</div>
+  </div>
+  <div id="hud">
+    <div
+      id="hud-level-box"
+      class="hud-box"
+      style="display:none;border-left-color:var(--accent)"
+    >
+      <div class="hud-label">LEVEL</div>
+      <div id="hud-level" class="hud-value">1</div>
+    </div>
+  </div>
+  <div id="ui-layer">
+    <div id="levels-screen" class="screen">
+      <h1>WAVE TRAINER</h1>
+      <div class="control-group">
+        <p>SELECT LEVEL</p>
+        <div class="level-selector">
+          <button id="btn-level-down" class="lvl-btn">−</button
+          ><input
+            id="level-input"
+            max="100"
+            min="1"
+            type="number"
+            value="1"
+          /><button id="btn-level-up" class="lvl-btn">+</button>
+        </div>
+        <div id="level-stats">
+          <div class="lstat">
+            <div class="lstat-label">PRECISION</div>
+            <div id="ls-precision" class="lstat-value">1.0</div>
+            <div class="lstat-bar">
+              <div
+                id="ls-precision-bar"
+                class="lstat-bar-fill"
+                style="width:0%"
+              ></div>
+            </div>
+          </div>
+          <div class="lstat">
+            <div class="lstat-label">SPEED</div>
+            <div id="ls-speed" class="lstat-value">1.0</div>
+            <div class="lstat-bar">
+              <div
+                id="ls-speed-bar"
+                class="lstat-bar-fill"
+                style="width:0%"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button id="btn-levels-start" class="btn-accent">START LEVEL</button
+      ><button id="btn-analyze">SIMULATE PERFECT PLAY</button>
+      <div id="analyze-results" class="control-group" style="display:none">
+        <p>PRECISION ANALYSIS</p>
+        <div class="analyze-row">
+          <span class="ar-label">Overall avg window</span
+          ><span class="ar-val" id="an-overall">—</span>
+        </div>
+        <div class="analyze-row">
+          <span class="ar-label">Regular wave</span
+          ><span class="ar-val" id="an-regular">—</span>
+        </div>
+        <div class="analyze-row">
+          <span class="ar-label">Mini wave</span
+          ><span class="ar-val" id="an-mini">—</span>
+        </div>
+        <div class="analyze-row">
+          <span class="ar-label">Mini height mult</span
+          ><span class="ar-val" id="an-mul">—</span>
+        </div>
+        <div class="analyze-row">
+          <span class="ar-label">Tightest click</span
+          ><span class="ar-val" id="an-min">—</span>
+        </div>
+        <div class="analyze-row">
+          <span class="ar-label">Total clicks</span
+          ><span class="ar-val" id="an-clicks">—</span>
+        </div>
+        <div class="analyze-note" id="an-note"></div>
+      </div>
+    </div>
+    <div id="settings-screen" class="screen">
+      <h1>SETTINGS</h1>
+      <div class="control-group">
+        <p>KEYBINDS</p>
+        <div class="keybind-row">
+          <span class="slider-label">CLICK / JUMP KEY</span
+          ><button id="btn-rebind-key">SPACE</button>
+        </div>
+        <div class="settings-note">
+          Mouse click and touch always work. This sets the keyboard key that
+          also triggers a click.
+        </div>
+      </div>
+      <div class="control-group">
+        <p>DIFFICULTY FLOOR</p>
+        <div class="slider-row">
+          <span class="slider-label">MIN PRECISION</span
+          ><input
+            id="slider-min-precision"
+            max="5"
+            min="1"
+            step="1"
+            type="range"
+            value="1"
+          /><span class="slider-val" id="val-min-precision">1</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">MIN SPEED</span
+          ><input
+            id="slider-min-speed"
+            max="5"
+            min="1"
+            step="1"
+            type="range"
+            value="1"
+          /><span class="slider-val" id="val-min-speed">1</span>
+        </div>
+        <div class="settings-note">
+          Sets the difficulty value at level 1. Each level still increases the
+          value, reaching 5 by level 100. A higher minimum never makes any level
+          easier.
+        </div>
+      </div>
+      <div class="control-group">
+        <p>WAVE MODE</p>
+        <div class="toggle-row">
+          <button id="btn-wave-normal-only" class="toggle-btn">
+            NORMAL WAVE ONLY</button
+          ><button id="btn-wave-mini-only" class="toggle-btn">
+            MINI WAVE ONLY
+          </button>
+        </div>
+        <div class="settings-note">
+          Only one can be enabled at a time. Enable one to play with just that
+          wave type; tap it again to return to the normal mix.
+        </div>
+      </div>
+      <button id="btn-settings-back">BACK</button>
+    </div>
+    <div id="win-screen" class="screen">
+      <h1>LEVEL CLEARED</h1>
+      <button id="btn-next-level" class="btn-accent">NEXT LEVEL →</button
+      ><button id="btn-win-menu">MENU</button>
+    </div>
+    <div id="countdown-display">3</div>
+  </div>
+  <script>
+    const canvas = document.getElementById("gameCanvas"),
+    ctx = canvas.getContext("2d", {
+    alpha: false,
+    desynchronized: true
+    }),
+    fpsEl = document.getElementById("fps-counter"),
+    audios = {
+    menu: new Audio("https://github.com/Wave-Trainer/wave-trainer.github.io/raw/refs/heads/main/mainmenu.ogg"),
+    ingame: new Audio("https://github.com/Wave-Trainer/wave-trainer.github.io/raw/refs/heads/main/ingame.ogg"),
+    die: new Audio("https://github.com/Wave-Trainer/wave-trainer.github.io/raw/refs/heads/main/die.ogg")
+    };
+    audios.menu.loop = !0, audios.ingame.loop = !0;
+    const savedIngamePos = localStorage.getItem("wave_ingame_audio_pos");
+    savedIngamePos && (audios.ingame.currentTime = parseFloat(savedIngamePos));
+    let currentMenuVol = 0,
+    targetMenuVol = 0,
+    menuFadeSpeed = 5e-4,
+    currentIngameVol = 0,
+    targetIngameVol = 0,
+    ingameFadeSpeed = .001,
+    duckingVal = 1,
+    lastAudioTime = performance.now(),
+    uiFirstTime = !0,
+    loadingStart = performance.now();
+
+    // Audio failure tracking to prevent continuous play() Promise spam
+    let menuPlayPending = false;
+    let ingamePlayPending = false;
+    let menuAudioFailed = false;
+    let ingameAudioFailed = false;
+    let dieAudioFailed = false;
+
+    const loadingTitleEl = document.getElementById("loading-title"),
+    loadingTextEl = document.getElementById("loading-text"),
+    loadingScreenEl = document.getElementById("loading-screen");
+    const checkLoadInterval = setInterval(() => {
+    let e = 0;
+    1 <= audios.menu.readyState && e++, 1 <= audios.ingame.readyState && e++, 1 <= audios.die.readyState && e++, 5e3 < performance.now() - loadingStart && (e = 1), loadingTextEl.textContent = Math.min(100, Math.floor(e / 1 * 100)) + "%", 1 <= e && (clearInterval(checkLoadInterval), loadingTitleEl.textContent = "READY", loadingTextEl.textContent = "CLICK ANYWHERE TO START", loadingScreenEl.style.cursor = "pointer", loadingScreenEl.addEventListener("click", startGameAfterLoad))
+    }, 100);
+
+    function startGameAfterLoad() {
+    loadingScreenEl.style.opacity = 0, setTimeout(() => {
+    loadingScreenEl.style.display = "none"
+    }, 500), audios.menu.volume = 0,
+    menuPlayPending = true,
+    audios.menu.play().then(() => { menuPlayPending = false; }).catch(() => { menuPlayPending = false; menuAudioFailed = true; }),
+    levelsScreen.classList.add("first-fade"), setTimeout(() => {
+    levelsScreen.classList.remove("first-fade")
+    }, 2100), switchState("LEVELS_MENU")
+    }
+    let lastAudioSaveTime = 0;
+
+    function saveIngameAudioPos(force) {
+    const now = performance.now();
+    if (!force && now - lastAudioSaveTime < 2000) return;
+    lastAudioSaveTime = now;
+    const pos = audios.ingame.currentTime;
+    setTimeout(() => {
+    try {
+    localStorage.setItem("wave_ingame_audio_pos", pos);
+    } catch (e) {}
+    }, 0);
+    }
+    document.addEventListener("visibilitychange", () => {
+    document.hidden && saveIngameAudioPos(true);
+    });
+    window.addEventListener("beforeunload", () => {
+    saveIngameAudioPos(true);
+    });
+    let slopeHead = 0,
+    cameraX = 0;
+    let slopeCapacity = 4096,
+    slopeX = new Float64Array(slopeCapacity),
+    slopeCenterY = new Float32Array(slopeCapacity),
+    slopeHeight = new Float32Array(slopeCapacity),
+    slopeCount = 0;
+
+    function ensureSlopeCapacity(n) {
+    if (n <= slopeCapacity) return;
+    let newCap = slopeCapacity;
+    while (newCap < n) newCap *= 2;
+    const newX = new Float64Array(newCap);
+    newX.set(slopeX.subarray(0, slopeCount));
+    const newC = new Float32Array(newCap);
+    newC.set(slopeCenterY.subarray(0, slopeCount));
+    const newH = new Float32Array(newCap);
+    newH.set(slopeHeight.subarray(0, slopeCount));
+    slopeX = newX, slopeCenterY = newC, slopeHeight = newH, slopeCapacity = newCap;
+    }
+
+    function pushSlopePoint(x, centerLineY, height) {
+    ensureSlopeCapacity(slopeCount + 1);
+    slopeX[slopeCount] = x, slopeCenterY[slopeCount] = centerLineY, slopeHeight[slopeCount] = height, slopeCount++;
+    }
+    const TRAIL_MAX = 1e3,
+    trailBufX = new Float32Array(TRAIL_MAX),
+    trailBufY = new Float32Array(TRAIL_MAX);
+    let trailHead = 0,
+    trailSize = 0,
+    isMiniwave = !1,
+    switchPoints = [],
+    currentScrollSpeed, gameState = "LOADING",
+    score = 0,
+    frameCount = 0,
+    lastFpsUpdate = 0,
+    lastTime = 0,
+    inputQueue = [],
+    isHoldingKey = !1,
+    lastProcessedTime = 0,
+    countdownValue = 3,
+    countdownTimer = 0,
+    customKey = localStorage.getItem("wave_custom_key") || "Space",
+    minPrecision = parseFloat(localStorage.getItem("wave_min_precision")) || 1,
+    minSpeed = parseFloat(localStorage.getItem("wave_min_speed")) || 1,
+    waveMode = localStorage.getItem("wave_mode") || "both",
+    bgScrollX = 0,
+    respawnTimeout = null,
+    currentLevel = 1,
+    levelPrecision = 1,
+    levelSpeed = 1,
+    endWorldX = 1 / 0,
+    winParticles = [],
+    winAnimTimer = 0,
+    winFlashAlpha = 0,
+    currentScale = 1,
+    startTx = 1500,
+    menuScroll = 0,
+    lastProgressVal = -1,
+    lastProgressPercent = -1;
+
+    const MINI_ANGLE = Math.atan(2);
+
+    function getLevelPrecision(e) {
+    return minPrecision + (e - 1) / 99 * (5 - minPrecision)
+    }
+
+    function getLevelSpeed(e) {
+    return minSpeed + (e - 1) / 99 * (5 - minSpeed)
+    }
+
+    function getLevelSeed(e) {
+    return 7919 * e
+    }
+
+    function mulberry32(t) {
+    return function() {
+    var e = t += 1831565813,
+    e = Math.imul(e ^ e >>> 15, 1 | e);
+    return (((e ^= e + Math.imul(e ^ e >>> 7, 61 | e)) ^ e >>> 14) >>> 0) / 4294967296
+    }
+    }
+    let seededRandom = Math.random;
+
+    function getTunnelHeight(e) {
+    return Math.round(200 - 31.25 * (e - 1))
+    }
+
+    function getBaseSpeed(e) {
+    return (1*(7.5 + 3.125 * (e - 1)))
+    }
+    let lastSlopeDirection = 1,
+    consecutiveSegments = 0,
+    spamCounter = 0,
+    consecutiveOneSegmentSlopes = 0;
+
+    let miniwaveHeightMul = 1.6;
+
+    function getTunnelHeightAtX(t) {
+    var a = getTunnelHeight(levelPrecision);
+    return isMiniwaveAtX(t) ? a * miniwaveHeightMul : a;
+    }
+
+    const arrow = {
+    x: 0,
+    y: 0,
+    size: 40,
+    angle: 0
+    },
+    ARROW_PAD = 22,
+    arrowOC = new OffscreenCanvas(arrow.size + 2 * ARROW_PAD, arrow.size + 2 * ARROW_PAD),
+    arrowOCtx = arrowOC.getContext("2d");
+
+    function buildArrowSprite() {
+    var e = arrow.size,
+    t = .15 * e,
+    a = arrowOC.width / 2,
+    n = arrowOC.height / 2;
+    arrowOCtx.setTransform(1, 0, 0, 1, 0, 0), arrowOCtx.clearRect(0, 0, arrowOC.width, arrowOC.height), arrowOCtx.translate(a, n), arrowOCtx.beginPath(), arrowOCtx.moveTo(.5 * e + t, 0), arrowOCtx.lineTo(-.5 * e + t, .5 * e), arrowOCtx.lineTo(-.2 * e + t, 0), arrowOCtx.lineTo(-.5 * e + t, -.5 * e), arrowOCtx.closePath();
+    arrowOCtx.fillStyle = "#ffffff", arrowOCtx.fill(), arrowOCtx.strokeStyle = "#000000", arrowOCtx.lineWidth = 2, arrowOCtx.stroke();
+    }
+    const PARTICLE_SPRITE_SIZE = 64,
+    PARTICLE_REF_SIZE = 32,
+    winParticleSprite = new OffscreenCanvas(PARTICLE_SPRITE_SIZE, PARTICLE_SPRITE_SIZE),
+    winParticleSpriteCtx = winParticleSprite.getContext("2d");
+
+    function buildWinParticleSprite() {
+    winParticleSpriteCtx.clearRect(0, 0, PARTICLE_SPRITE_SIZE, PARTICLE_SPRITE_SIZE);
+    winParticleSpriteCtx.save();
+    winParticleSpriteCtx.translate(PARTICLE_SPRITE_SIZE / 2, PARTICLE_SPRITE_SIZE / 2);
+    winParticleSpriteCtx.shadowColor = "rgba(255,255,255,0.9)";
+    winParticleSpriteCtx.shadowBlur = 8;
+    winParticleSpriteCtx.fillStyle = "#ffffff";
+    winParticleSpriteCtx.fillRect(-PARTICLE_REF_SIZE / 2, -PARTICLE_REF_SIZE / 4, PARTICLE_REF_SIZE, PARTICLE_REF_SIZE / 2);
+    winParticleSpriteCtx.restore();
+    }
+    const gridTile = new OffscreenCanvas(80, 80),
+    gridTileCtx = gridTile.getContext("2d");
+
+    function buildGridTile() {
+    gridTileCtx.clearRect(0, 0, 80, 80);
+    gridTileCtx.strokeStyle = "rgba(255,255,255,0.03)", gridTileCtx.lineWidth = 1, gridTileCtx.beginPath(), gridTileCtx.moveTo(79.5, 0), gridTileCtx.lineTo(79.5, 80), gridTileCtx.moveTo(0, 79.5), gridTileCtx.lineTo(80, 79.5), gridTileCtx.stroke();
+    }
+    const gridPattern = ctx.createPattern(gridTile, "repeat"),
+    gridMatrix = new DOMMatrix;
+
+    function drawArrow(e, t, a) {
+    var n = arrowOC.width / 2,
+    r = arrowOC.height / 2;
+    ctx.save(), ctx.translate(e, t), ctx.rotate(a), isMiniwave && ctx.scale(.5, .5), ctx.drawImage(arrowOC, -n, -r), ctx.restore()
+    }
+    let screenShake = {
+    x: 0,
+    y: 0,
+    duration: 0,
+    intensity: 0
+    },
+    flashEffect = {
+    alpha: 0,
+    duration: 0
+    };
+    const levelsScreen = document.getElementById("levels-screen"),
+    winScreen = document.getElementById("win-screen"),
+    settingsScreen = document.getElementById("settings-screen"),
+    settingsBtn = document.getElementById("settings-btn"),
+    btnRebindKey = document.getElementById("btn-rebind-key"),
+    btnSettingsBack = document.getElementById("btn-settings-back"),
+    sliderMinPrecision = document.getElementById("slider-min-precision"),
+    valMinPrecision = document.getElementById("val-min-precision"),
+    sliderMinSpeed = document.getElementById("slider-min-speed"),
+    valMinSpeed = document.getElementById("val-min-speed"),
+    btnWaveNormalOnly = document.getElementById("btn-wave-normal-only"),
+    btnWaveMiniOnly = document.getElementById("btn-wave-mini-only"),
+    countdownDisplay = document.getElementById("countdown-display"),
+    hud = document.getElementById("hud"),
+    hudLevelBox = document.getElementById("hud-level-box"),
+    hudLevelEl = document.getElementById("hud-level"),
+    levelInput = document.getElementById("level-input"),
+    btnLevelDown = document.getElementById("btn-level-down"),
+    btnLevelUp = document.getElementById("btn-level-up"),
+    btnLevelsStart = document.getElementById("btn-levels-start"),
+    lsPrecision = document.getElementById("ls-precision"),
+    lsPrecisionBar = document.getElementById("ls-precision-bar"),
+    lsSpeed = document.getElementById("ls-speed"),
+    lsSpeedBar = document.getElementById("ls-speed-bar"),
+    btnNextLevel = document.getElementById("btn-next-level"),
+    btnWinMenu = document.getElementById("btn-win-menu"),
+    progressBarContainer = document.getElementById("progress-bar-container"),
+    progressBarFill = document.getElementById("progress-bar-fill"),
+    progressBarText = document.getElementById("progress-bar-text"),
+    btnAnalyze = document.getElementById("btn-analyze"),
+    analyzeResults = document.getElementById("analyze-results"),
+    anOverall = document.getElementById("an-overall"),
+    anRegular = document.getElementById("an-regular"),
+    anMini = document.getElementById("an-mini"),
+    anMul = document.getElementById("an-mul"),
+    anMin = document.getElementById("an-min"),
+    anClicks = document.getElementById("an-clicks"),
+    anNote = document.getElementById("an-note");
+
+    function updateLevelUI() {
+    if (analyzeResults) analyzeResults.style.display = "none";
+    var e = currentLevel;
+    const t = getLevelPrecision(levelInput.value = e),
+    a = getLevelSpeed(e);
+    lsPrecision.textContent = t.toFixed(2), lsSpeed.textContent = a.toFixed(2), lsPrecisionBar.style.width = ((t - 1) / 4 * 100).toFixed(1) + "%", lsSpeedBar.style.width = ((a - 1) / 4 * 100).toFixed(1) + "%"
+    }
+
+    function clampLevel(e) {
+    return Math.max(1, Math.min(100, e))
+    }
+
+    function fit() {
+    canvas.width = window.innerWidth, canvas.height = window.innerHeight, currentScale = Math.min(canvas.width / 800, canvas.height / 820)
+    }
+
+    function hideAllScreens() {
+    levelsScreen.style.display = "none", winScreen.style.display = "none", settingsScreen.style.display = "none", countdownDisplay.style.display = "none", hud.style.display = "none", progressBarContainer.style.display = "none"
+    }
+
+    function switchState(e) {
+    clearTimeout(respawnTimeout), respawnTimeout = null, ("LEVELS_PLAYING" === gameState || "WIN_ANIM" === gameState || "GAMEOVER" === gameState) && 0 < audios.ingame.currentTime && saveIngameAudioPos(false), gameState = e, hideAllScreens();
+
+    if ("LEVELS_PLAYING" === e || "LEVELS_COUNTDOWN" === e || "WIN_ANIM" === e || "GAMEOVER" === e || "WIN" === e) {
+    progressBarContainer.style.display = "flex";
+    }
+
+    settingsBtn.style.display = "LEVELS_MENU" === e || "WIN" === e ? "flex" : "none", "LEVELS_MENU" === e ? (levelsScreen.style.display = "flex", updateLevelUI(), levelPrecision = getLevelPrecision(currentLevel), levelSpeed = getLevelSpeed(currentLevel), resetGameVariables(), targetMenuVol = 1, menuFadeSpeed = 5e-4, targetIngameVol = 0, ingameFadeSpeed = .001, saveIngameAudioPos(false)) : "LEVELS_COUNTDOWN" === e ? (levelPrecision = getLevelPrecision(currentLevel), levelSpeed = getLevelSpeed(currentLevel), countdownDisplay.style.display = "block", resetGameVariables(), countdownValue = 3, countdownTimer = performance.now(), countdownDisplay.textContent = "3", hudLevelEl.textContent = currentLevel, targetMenuVol = 0, menuFadeSpeed = 1 / 3e3) : "LEVELS_PLAYING" === e ? (hud.style.display = "flex", hudLevelBox.style.display = "block", lastTime = performance.now(), lastProcessedTime = performance.now(), inputQueue = [], targetIngameVol = 1, ingameFadeSpeed = .001) : "GAMEOVER" === e ? (hud.style.display = "flex", hudLevelBox.style.display = "block", respawnTimeout = setTimeout(() => {
+    levelPrecision = getLevelPrecision(currentLevel), levelSpeed = getLevelSpeed(currentLevel), resetGameVariables(), switchState("LEVELS_PLAYING")
+    }, 600)) : "WIN_ANIM" === e ? (hud.style.display = "flex", hudLevelBox.style.display = "block", winAnimTimer = performance.now(), winFlashAlpha = .6, spawnWinParticles()) : "WIN" === e && (winScreen.style.display = "flex", hud.style.display = "flex", hudLevelBox.style.display = "block", btnNextLevel.style.display = "")
+    }
+    levelInput.addEventListener("input", () => {
+    var e = parseInt(levelInput.value) || 1;
+    currentLevel = clampLevel(e), updateLevelUI()
+    }), levelInput.addEventListener("blur", () => {
+    levelInput.value = currentLevel
+    }), btnLevelDown.addEventListener("click", () => {
+    currentLevel = clampLevel(currentLevel - 1), updateLevelUI()
+    }), btnLevelUp.addEventListener("click", () => {
+    currentLevel = clampLevel(currentLevel + 1), updateLevelUI()
+    }), btnLevelsStart.addEventListener("click", () => {
+    switchState("LEVELS_COUNTDOWN")
+    }), btnNextLevel.addEventListener("click", () => {
+    currentLevel = clampLevel(currentLevel + 1), updateLevelUI(), switchState("LEVELS_COUNTDOWN")
+    }), btnWinMenu.addEventListener("click", () => {
+    switchState("LEVELS_MENU")
+    });
+    let preSettingsState = "LEVELS_MENU",
+    isRebindingKey = false;
+
+    function keyCodeToLabel(code) {
+    if (!code) return "SPACE";
+    if ("Space" === code) return "SPACE";
+    if (code.startsWith("Arrow")) return code.replace("Arrow", "").toUpperCase();
+    if (code.startsWith("Key")) return code.slice(3);
+    if (code.startsWith("Digit")) return code.slice(5);
+    return code.toUpperCase();
+    }
+
+    function updateKeybindUI() {
+    btnRebindKey.textContent = isRebindingKey ? "PRESS A KEY…" : keyCodeToLabel(customKey);
+    btnRebindKey.classList.toggle("listening", isRebindingKey)
+    }
+    function syncWaveModeUI() {
+    btnWaveNormalOnly.classList.toggle("active", waveMode === "normal");
+    btnWaveMiniOnly.classList.toggle("active", waveMode === "mini");
+    }
+    function setWaveMode(mode) {
+    waveMode = (waveMode === mode) ? "both" : mode;
+    localStorage.setItem("wave_mode", waveMode);
+    syncWaveModeUI();
+    invalidateMiniMulCache();
+    updateLevelUI();
+    }
+    btnWaveNormalOnly.addEventListener("click", () => setWaveMode("normal"));
+    btnWaveMiniOnly.addEventListener("click", () => setWaveMode("mini"));
+    syncWaveModeUI();
+    settingsBtn.addEventListener("click", () => {
+    "LEVELS_MENU" !== gameState && "WIN" !== gameState || (preSettingsState = gameState, hideAllScreens(), settingsScreen.style.display = "flex", isRebindingKey = false, updateKeybindUI(), syncDifficultySliders(), syncWaveModeUI())
+    }), btnSettingsBack.addEventListener("click", () => {
+    isRebindingKey = false, hideAllScreens(), switchState(preSettingsState)
+    }), btnRebindKey.addEventListener("click", () => {
+    isRebindingKey = true, updateKeybindUI()
+    }), updateKeybindUI(), buildArrowSprite(), buildGridTile(), buildWinParticleSprite();
+
+    function syncDifficultySliders() {
+    sliderMinPrecision.value = minPrecision;
+    valMinPrecision.textContent = minPrecision;
+    sliderMinSpeed.value = minSpeed;
+    valMinSpeed.textContent = minSpeed;
+    }
+    sliderMinPrecision.addEventListener("input", () => {
+    minPrecision = parseInt(sliderMinPrecision.value);
+    localStorage.setItem("wave_min_precision", minPrecision);
+    valMinPrecision.textContent = minPrecision;
+    invalidateMiniMulCache();
+    updateLevelUI();
+    });
+    sliderMinSpeed.addEventListener("input", () => {
+    minSpeed = parseInt(sliderMinSpeed.value);
+    localStorage.setItem("wave_min_speed", minSpeed);
+    valMinSpeed.textContent = minSpeed;
+    invalidateMiniMulCache();
+    updateLevelUI();
+    });
+    syncDifficultySliders();
+    const LEVEL_SCORE_SPEED = 10;
+
+    function resetGameVariables() {
+    miniwaveHeightMul = getMiniwaveMul(currentLevel);
+    levelPrecision;
+    var e = levelSpeed;
+    currentScrollSpeed = getBaseSpeed(e), seededRandom = mulberry32(getLevelSeed(currentLevel)), fit();
+    var t = canvas.width / currentScale;
+    startTx = Math.max(1500, t);
+    e = currentScrollSpeed / (.0166 * LEVEL_SCORE_SPEED);
+    endWorldX = startTx + 90 * e, isMiniwave = "mini" === waveMode, switchPoints = [], "normal" === waveMode ? void 0 : "mini" === waveMode ? switchPoints.push({
+    x: startTx,
+    type: "mini"
+    }) : (currentLevel >= 25 && currentLevel <= 100 && switchPoints.push({
+    x: startTx + 45 * e,
+    type: "mini"
+    })), arrow.x = 0, arrow.y = 0, arrow.angle = Math.PI / 4, score = 0, lastProgressVal = -1, lastProgressPercent = -1, lastTime = performance.now(), lastProcessedTime = performance.now(), inputQueue = [], isHoldingKey = !1, slopeCount = 0, slopeHead = 0, cameraX = 0, trailHead = 0, trailSize = 0, lastSlopeDirection = 1, consecutiveSegments = 0, spamCounter = 0, consecutiveOneSegmentSlopes = 0, screenShake.x = 0, screenShake.y = 0, screenShake.duration = 0, screenShake.intensity = 0, flashEffect.alpha = 0, flashEffect.duration = 0, winParticles = [], winFlashAlpha = 0;
+    for (var t = cameraX + t + 2e3, a = Math.min(t, endWorldX); 0 === slopeCount || slopeX[slopeCount - 1] < a;) {
+    var n = slopeCount;
+    if (generateNewSlopeSegment(), slopeCount === n) break
+    }
+    }
+
+    function recordInput(e) {
+    "LEVELS_PLAYING" === gameState && isHoldingKey !== e && (isHoldingKey = e, inputQueue.push({
+    state: e,
+    time: performance.now()
+    }))
+    }
+
+    function isMiniwaveAtX(t) {
+    let a = !1;
+    for (let e = 0; e < switchPoints.length; e++) t >= switchPoints[e].x - .01 && (a = "mini" === switchPoints[e].type);
+    return a
+    }
+
+    function getNextSwitchX(t) {
+    for (let e = 0; e < switchPoints.length; e++)
+    if (switchPoints[e].x > t + .01) return switchPoints[e].x;
+    return endWorldX
+    }
+
+    function generateNewSlopeSegment() {
+    let n = startTx,
+    r = 0;
+    if (0 < slopeCount && (n = slopeX[slopeCount - 1], r = slopeCenterY[slopeCount - 1]), !(n >= endWorldX)) {
+    let lvlFactor = (Math.min(currentLevel, 10) - 1) / 9;
+    var i = isMiniwaveAtX(n + .1),
+    l = i ? (1*70) : (1*70),
+    o = i ? (1*140) : (1*70);
+    let e = n + l;
+    var s = getNextSwitchX(n);
+    e > s && (e = s), e > endWorldX && (e = endWorldX);
+    var c = getTunnelHeightAtX(e),
+    d = c / 2 - 400 + 40,
+    u = 400 - c / 2 - 40;
+    let t = !1;
+    var m, i = o / l,
+    c = (e - n) * i,
+    o = r + c * lastSlopeDirection;
+    if (o < d || u < o) t = !0, spamCounter = 0;
+    else if (0 < spamCounter) t = !0, spamCounter--;
+    else {
+    let e = 1 / 0;
+    for (var p of switchPoints) {
+    p = Math.abs(n - p.x);
+    p < e && (e = p)
+    }
+    e < 600 ? (40 < r && 0 < lastSlopeDirection || r < -40 && lastSlopeDirection < 0 || 2 <= consecutiveSegments) && (t = !0) : (l = seededRandom() < .35 ? 2 : 3, (consecutiveSegments >= l || seededRandom() < .52) && (t = !0), t && 0 === spamCounter && seededRandom() < .25 && (spamCounter = 1))
+    }
+    t && 1 === consecutiveSegments && 3 <= consecutiveOneSegmentSlopes && (o < d || u < o || (t = !1, spamCounter = 0)), t ? (1 === consecutiveSegments ? consecutiveOneSegmentSlopes++ : consecutiveOneSegmentSlopes = 0, lastSlopeDirection *= -1, consecutiveSegments = 1) : (consecutiveSegments++, consecutiveOneSegmentSlopes = 0);
+    let a = r + c * lastSlopeDirection;
+    (a < d || a > u) && (a = Math.max(d, Math.min(u, a)), u = Math.abs(a - r), e = n + u / i), e > s && (e = s, m = e - n, a = r + m * i * lastSlopeDirection), e > endWorldX && (e = endWorldX, m = e - n, a = r + m * i * lastSlopeDirection);
+    i = getTunnelHeightAtX(e);
+    pushSlopePoint(e, a, i)
+    }
+    }
+
+    function drawSlopes() {
+    if (!(slopeCount < 2)) {
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(slopeX[slopeHead], slopeCenterY[slopeHead] - slopeHeight[slopeHead] / 2);
+    for (let e = slopeHead + 1; e < slopeCount; e++) {
+    ctx.lineTo(slopeX[e], slopeCenterY[e] - slopeHeight[e] / 2);
+    }
+    ctx.moveTo(slopeX[slopeHead], slopeCenterY[slopeHead] + slopeHeight[slopeHead] / 2);
+    for (let e = slopeHead + 1; e < slopeCount; e++) {
+    ctx.lineTo(slopeX[e], slopeCenterY[e] + slopeHeight[e] / 2);
+    }
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    }
+    }
+
+    function drawTrail() {
+    if (!(trailSize < 2)) {
+    ctx.beginPath();
+    let t = !1;
+    var a = (trailHead - trailSize + TRAIL_MAX) % TRAIL_MAX;
+
+    // Optimization: Search backwards to find the first visible point instantly
+    let startIdx = 0;
+    for (let e = trailSize - 1; e >= 0; e--) {
+    var idx = (a + e) % TRAIL_MAX;
+    if (trailBufX[idx] < cameraX - 20) {
+    startIdx = e + 1;
+    break;
+    }
+    }
+    if (startIdx >= trailSize) startIdx = trailSize - 1;
+    if (startIdx < 0) startIdx = 0;
+
+    for (let e = startIdx; e < trailSize; e++) {
+    var n = (a + e) % TRAIL_MAX,
+    r = trailBufX[n];
+    t ? ctx.lineTo(r, trailBufY[n]) : (ctx.moveTo(r, trailBufY[n]), t = !0)
+    }
+
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+    ctx.lineWidth = isMiniwave ? 3 : 6;
+    ctx.stroke();
+    }
+    }
+
+    function updateAndDrawSlopes(e) {
+    for (var t = isMiniwave ? 160 : 80; slopeHead < slopeCount - 1 && slopeX[slopeHead + 1] < cameraX - t;) slopeHead++;
+    if ("GAMEOVER" !== gameState && "WIN" !== gameState && "WIN_ANIM" !== gameState)
+    for (var a = canvas.width / currentScale, n = Math.min(cameraX + a + 1e3, endWorldX); 0 === slopeCount || slopeX[slopeCount - 1] < n;) {
+    var r = slopeCount;
+    if (generateNewSlopeSegment(), slopeCount === r) break
+    }
+    drawSlopes()
+    }
+    const _boundsResult = {
+    top: -500,
+    bottom: 500
+    };
+
+    function getBoundsAtX(targetX) {
+    if (slopeCount < 2) return _boundsResult.top = -500, _boundsResult.bottom = 500, _boundsResult;
+    let n = 0,
+    r = slopeCount - 2;
+    while (n < r) {
+    let i = (n + r + 1) >> 1;
+    if (slopeX[i] <= targetX) n = i;
+    else r = i - 1;
+    }
+    if (n < 0 || n + 1 >= slopeCount || slopeX[n] > targetX || slopeX[n + 1] <= targetX) return _boundsResult.top = -500, _boundsResult.bottom = 500, _boundsResult;
+    let s = (targetX - slopeX[n]) / (slopeX[n + 1] - slopeX[n]);
+    let t = slopeCenterY[n] + s * (slopeCenterY[n + 1] - slopeCenterY[n]);
+    let h = slopeHeight[n] + s * (slopeHeight[n + 1] - slopeHeight[n]);
+    _boundsResult.top = t - h / 2;
+    _boundsResult.bottom = t + h / 2;
+    return _boundsResult;
+    }
+
+    function drawSwitchLines() {
+    var e, t = canvas.width / currentScale;
+    for (e of switchPoints) {
+    if (e.x < cameraX - 100 || e.x > cameraX + t + 100) continue;
+    let bounds = getBoundsAtX(e.x);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 24;
+    ctx.beginPath();
+    ctx.moveTo(e.x, bounds.top);
+    ctx.lineTo(e.x, bounds.bottom);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(e.x, bounds.top);
+    ctx.lineTo(e.x, bounds.bottom);
+    ctx.stroke();
+
+    if ("mini" === e.type) {
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([5, 7]);
+    } else {
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.lineWidth = 4;
+    ctx.setLineDash([16, 10]);
+    }
+    ctx.beginPath();
+    ctx.moveTo(e.x, bounds.top);
+    ctx.lineTo(e.x, bounds.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    }
+    }
+
+    function drawEndBar() {
+    var e, t;
+    if (endWorldX !== 1 / 0) {
+    e = endWorldX;
+    t = canvas.width / currentScale;
+    if (!(e < cameraX - 100 || e > cameraX + t + 100)) {
+    let bounds = getBoundsAtX(e);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 24;
+    ctx.beginPath();
+    ctx.moveTo(e, bounds.top);
+    ctx.lineTo(e, bounds.bottom);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(e, bounds.top);
+    ctx.lineTo(e, bounds.bottom);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.lineWidth = 4;
+    ctx.setLineDash([16, 10]);
+    ctx.beginPath();
+    ctx.moveTo(e, bounds.top);
+    ctx.lineTo(e, bounds.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    }
+    }
+    }
+
+    function updateProgressBarUI() {
+    if ("LEVELS_PLAYING" === gameState || "LEVELS_COUNTDOWN" === gameState || "WIN_ANIM" === gameState || "GAMEOVER" === gameState || "WIN" === gameState) {
+    var e = Math.min(score / 100, 1), t = Math.floor(100 * e);
+    if (.001 < Math.abs(e - lastProgressVal)) {
+    progressBarFill.style.transform = `scaleX(${e})`;
+    lastProgressVal = e;
+    }
+    if (t !== lastProgressPercent) {
+    progressBarText.textContent = t + "%";
+    lastProgressPercent = t;
+    }
+    }
+    }
+
+    function spawnWinParticles() {
+    var t = cameraX + arrow.x,
+    a = arrow.y;
+    for (let e = 0; e < 120; e++) {
+    var n = Math.random() * Math.PI * 2,
+    r = 2 + 8 * Math.random();
+    winParticles.push({
+    x: t,
+    y: a,
+    vx: Math.cos(n) * r,
+    vy: Math.sin(n) * r - 3,
+    life: 1,
+    decay: .002 + .008 * Math.random(),
+    size: 2 + 6 * Math.random(),
+    hue: 0,
+    rot: Math.random() * Math.PI * 2,
+    rotSpeed: .2 * (Math.random() - .5)
+    })
+    }
+    }
+
+    function updateAndDrawWinParticles(t) {
+    ctx.save(), ctx.globalCompositeOperation = "lighter";
+    for (let e = winParticles.length - 1; 0 <= e; e--) {
+    const a = winParticles[e];
+    a.x += a.vx * t, a.y += a.vy * t, a.vy += .04 * t, a.life -= a.decay * t, a.rot += a.rotSpeed * t;
+    if (a.life <= 0) {
+    winParticles.splice(e, 1);
+    continue
+    }
+    var s = a.size / PARTICLE_REF_SIZE;
+    ctx.globalAlpha = a.life, ctx.save(), ctx.translate(a.x, a.y), ctx.rotate(a.rot), ctx.drawImage(winParticleSprite, -PARTICLE_SPRITE_SIZE / 2 * s, -PARTICLE_SPRITE_SIZE / 2 * s, PARTICLE_SPRITE_SIZE * s, PARTICLE_SPRITE_SIZE * s), ctx.restore()
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1
+    }
+
+    function easeOutBack(e) {
+    return 1 + 2.70158 * Math.pow(e - 1, 3) + 1.70158 * Math.pow(e - 1, 2)
+    }
+
+    function checkCollision() {
+    var e = isMiniwave ? 0.7825 : 1.565,
+    t = arrow.size * e / 2;
+    if (arrow.y - t < -400 || 400 < arrow.y + t) return !0;
+    if (slopeCount - slopeHead < 2) return !1;
+    var a = cameraX + arrow.x;
+    let n = slopeHead,
+    r = slopeCount - 2;
+    for (; n < r;) {
+    var i = n + r + 1 >> 1;
+    slopeX[i] <= a ? n = i : r = i - 1
+    }
+    if (n < 0 || n + 1 >= slopeCount || slopeX[n] > a || slopeX[n + 1] <= a) return !1;
+    var s = (a - slopeX[n]) / (slopeX[n + 1] - slopeX[n]),
+    t = slopeCenterY[n] + s * (slopeCenterY[n + 1] - slopeCenterY[n]),
+    o = slopeHeight[n] + s * (slopeHeight[n + 1] - slopeHeight[n]),
+    l = t - o / 2,
+    o = t + o / 2,
+    e = arrow.size * e * .28;
+    return arrow.y - e < l || arrow.y + e > o
+    }
+
+    function triggerCollisionFeedback() {
+    screenShake.x = 0;
+    screenShake.y = 0;
+    screenShake.duration = 15;
+    screenShake.intensity = 10;
+
+    flashEffect.alpha = .8;
+    flashEffect.duration = 5;
+
+    if (!dieAudioFailed) {
+    audios.die.currentTime = 0;
+    audios.die.play().catch(() => { dieAudioFailed = true; });
+    }
+    duckingVal = .2;
+    }
+
+    function updateCollisionFeedback(e) {
+    0 < screenShake.duration ? (screenShake.x = 2 * (Math.random() - .5) * screenShake.intensity, screenShake.y = 2 * (Math.random() - .5) * screenShake.intensity, screenShake.duration -= e) : (screenShake.x = 0, screenShake.y = 0), 0 < flashEffect.duration ? (flashEffect.alpha = flashEffect.duration / 5, flashEffect.duration -= e) : flashEffect.alpha = 0
+    }
+
+    function applyPhysicsStep(e, t, a) {
+    e = a * e * (isMiniwave ? 2 : 1);
+    t ? arrow.y -= e : arrow.y += e
+    }
+    const FIXED_DT = 1000 / 240;
+
+    function botGetCY(x) {
+      if (slopeCount < 2) return 0;
+      if (x < startTx) return 0;
+      if (x < slopeX[0]) {
+        let s = (x - startTx) / (slopeX[0] - startTx);
+        return s * slopeCenterY[0];
+      }
+      let n = slopeHead, r = slopeCount - 2;
+      while (n < r) {
+        let mid = (n + r + 1) >> 1;
+        if (slopeX[mid] <= x) n = mid;
+        else r = mid - 1;
+      }
+      if (n < 0) n = 0;
+      if (n >= slopeCount - 1) n = slopeCount - 2;
+      let s = (x - slopeX[n]) / (slopeX[n + 1] - slopeX[n]);
+      return slopeCenterY[n] + s * (slopeCenterY[n + 1] - slopeCenterY[n]);
+    }
+
+    function integrateMotion(duration, holding) {
+      let remaining = duration;
+      while (0 < remaining) {
+        let dt = remaining < FIXED_DT ? remaining : FIXED_DT;
+        let speed = arrow.x < 480 ? Math.max(currentScrollSpeed, 13.75) : currentScrollSpeed;
+        isMiniwave = isMiniwaveAtX(cameraX + arrow.x);
+        
+        if (botMode) {
+          let simX = cameraX + arrow.x;
+          let targetY = botGetCY(simX);
+          if (arrow.y > targetY) holding = true;
+          else if (arrow.y < targetY) holding = false;
+          isHoldingKey = holding;
+        }
+        
+        applyPhysicsStep(.06 * dt, holding, speed);
+        let move = speed * .06 * dt;
+        arrow.x < 480 ? (arrow.x += move, 480 < arrow.x && (cameraX += arrow.x - 480, arrow.x = 480)) : cameraX += move;
+        remaining -= dt
+      }
+    }
+
+    function update(n) {
+    let e = n - lastTime;
+    if (e > 50) e = 50; // Prevent spiral of death
+    var r = .06 * e;
+    let t = (lastTime = n) - (window._lastAudioTime || n);
+    if (t > 50) t = 50;
+    window._lastAudioTime = n, currentMenuVol < targetMenuVol ? currentMenuVol = Math.min(targetMenuVol, currentMenuVol + t * menuFadeSpeed) : currentMenuVol > targetMenuVol && (currentMenuVol = Math.max(targetMenuVol, currentMenuVol - t * menuFadeSpeed)), currentIngameVol < targetIngameVol ? currentIngameVol = Math.min(targetIngameVol, currentIngameVol + t * ingameFadeSpeed) : currentIngameVol > targetIngameVol && (currentIngameVol = Math.max(targetIngameVol, currentIngameVol - t * ingameFadeSpeed)), duckingVal < 1 && (duckingVal = Math.min(1, duckingVal + .001 * t));
+
+    if (.001 < Math.abs(audios.menu.volume - currentMenuVol)) audios.menu.volume = currentMenuVol;
+    var i = currentIngameVol * duckingVal;
+    if (.001 < Math.abs(audios.ingame.volume - i)) audios.ingame.volume = i;
+
+    if (0 < currentMenuVol) {
+    if (audios.menu.paused && !menuPlayPending && !menuAudioFailed) {
+    menuPlayPending = true;
+    audios.menu.play().then(() => { menuPlayPending = false; }).catch(() => { menuPlayPending = false; menuAudioFailed = true; });
+    }
+    } else if (!audios.menu.paused) {
+    audios.menu.pause();
+    }
+
+    if (0 < currentIngameVol) {
+    if (audios.ingame.paused && !ingamePlayPending && !ingameAudioFailed) {
+    ingamePlayPending = true;
+    audios.ingame.play().then(() => { ingamePlayPending = false; }).catch(() => { ingamePlayPending = false; ingameAudioFailed = true; });
+    }
+    } else if (!audios.ingame.paused) {
+    audios.ingame.pause();
+    }
+
+    frameCount++;
+    if (500 < n - lastFpsUpdate) {
+    fpsEl.textContent = `FPS: ${Math.round(1e3*frameCount/(n-lastFpsUpdate))}`;
+    lastFpsUpdate = n;
+    frameCount = 0;
+    }
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if ("LOADING" !== gameState) {
+    ctx.save(), ctx.translate(screenShake.x, screenShake.y), bgScrollX = "LEVELS_PLAYING" === gameState || "LEVELS_COUNTDOWN" === gameState || "GAMEOVER" === gameState || "WIN" === gameState || "WIN_ANIM" === gameState ? .4 * -cameraX % 80 : (menuScroll -= .4 * r, menuScroll % 80), ctx.translate(0, canvas.height / 2), ctx.scale(currentScale, currentScale);
+    var a = canvas.width / currentScale,
+    i = canvas.height / currentScale;
+
+    gridMatrix.m41 = Math.round(bgScrollX), gridMatrix.m42 = 0, gridPattern.setTransform(gridMatrix), ctx.fillStyle = gridPattern, ctx.fillRect(0, -i / 2, a, i), ctx.translate(-cameraX, 0);
+
+    a = "LEVELS_COUNTDOWN" === gameState, i = "LEVELS_PLAYING" === gameState;
+    if (a) updateAndDrawSlopes(0), drawSwitchLines(), drawEndBar(), 200 <= n - countdownTimer && (countdownTimer = n, countdownValue--, 0 < countdownValue ? countdownDisplay.textContent = countdownValue : 0 === countdownValue ? countdownDisplay.textContent = "GO!" : (hideAllScreens(), switchState("LEVELS_PLAYING")));
+    else if (i) {
+    // Keep simulation time tied to the rAF frame delta only. Replaying
+    // raw input timestamps inside the frame made mouse-down frames use
+    // a different clock than normal frames, which is what produced the
+    // visible forward skip. Input now only selects the direction for
+    // this frame; it never contributes extra elapsed time.
+    if (e > 0) integrateMotion(e, isHoldingKey);
+    inputQueue.length = 0;
+    lastProcessedTime = n;
+    var c = cameraX + arrow.x;
+    isMiniwave = isMiniwaveAtX(c), c >= startTx && (d = LEVEL_SCORE_SPEED, score += 0.0184444444 * d * r, 100 <= score && (score = 100, switchState("WIN_ANIM")));
+    var d = isMiniwave ? MINI_ANGLE : .785;
+    arrow.angle = isHoldingKey ? -d : d, checkCollision() && (triggerCollisionFeedback(), switchState("GAMEOVER")), trailBufX[trailHead] = c, trailBufY[trailHead] = arrow.y, trailHead = (trailHead + 1) % TRAIL_MAX, trailSize < TRAIL_MAX && trailSize++, updateAndDrawSlopes(r), drawSwitchLines(), drawEndBar(), drawTrail(), drawArrow(c, arrow.y, arrow.angle)
+    } else "LEVELS_MENU" !== gameState && (updateAndDrawSlopes(0), drawSwitchLines(), "GAMEOVER" !== gameState && "WIN" !== gameState && "WIN_ANIM" !== gameState || drawTrail(), drawEndBar(), drawArrow(cameraX + arrow.x, arrow.y, arrow.angle)), "WIN_ANIM" === gameState && (updateAndDrawWinParticles(r), 1800 < n - winAnimTimer && switchState("WIN"));
+    if (ctx.restore(), updateCollisionFeedback(r), 0 < flashEffect.alpha && (ctx.fillStyle = `rgba(0,0,0,${flashEffect.alpha})`, ctx.fillRect(0, 0, canvas.width, canvas.height)), 0 < winFlashAlpha && (ctx.fillStyle = `rgba(255,255,255,${winFlashAlpha})`, ctx.fillRect(0, 0, canvas.width, canvas.height), winFlashAlpha -= .008 * r, winFlashAlpha < 0 && (winFlashAlpha = 0)), "WIN_ANIM" === gameState) {
+    const e = n - winAnimTimer;
+    r = Math.min(e / 600, 1), n = .5 + .5 * easeOutBack(r), r = r;
+    ctx.save(), ctx.globalAlpha = r, ctx.fillStyle = "#ffffff", ctx.font = "900 48px Inter, sans-serif", ctx.textAlign = "center", ctx.textBaseline = "middle", ctx.translate(canvas.width / 2, canvas.height / 2), ctx.scale(n, n), ctx.fillText("LEVEL CLEARED", 0, 0), ctx.globalAlpha = 1, ctx.restore()
+    }
+    updateProgressBarUI(), requestAnimationFrame(update)
+    } else requestAnimationFrame(update)
+    }
+
+    /* =====================================================================
+    PRECISION ANALYSIS
+    ===================================================================== */
+    const ANALYZE_DX = 2;
+
+    function analyzeLevel(level, mul, searchIters) {
+    const lp = getLevelPrecision(level), ls = getLevelSpeed(level);
+    const scrollSpeed = getBaseSpeed(ls);
+    const speedMs = scrollSpeed * 0.06;
+    const wIters = searchIters || 20;
+
+    const sv = {
+    slopeX, slopeCenterY, slopeHeight, slopeCapacity, slopeCount, slopeHead,
+    switchPoints, startTx, endWorldX, currentScrollSpeed, levelPrecision, levelSpeed,
+    seededRandom, lastSlopeDirection, consecutiveSegments, spamCounter, consecutiveOneSegmentSlopes,
+    miniwaveHeightMul
+    };
+    slopeCapacity = 4096;
+    slopeX = new Float64Array(slopeCapacity);
+    slopeCenterY = new Float32Array(slopeCapacity);
+    slopeHeight = new Float32Array(slopeCapacity);
+    slopeCount = 0; slopeHead = 0;
+    levelPrecision = lp; levelSpeed = ls; currentScrollSpeed = scrollSpeed;
+    miniwaveHeightMul = mul;
+    startTx = 1500;
+    const es = currentScrollSpeed / (0.0166 * 10);
+    endWorldX = startTx + 90 * es;
+    switchPoints = "normal" === waveMode ? [] : "mini" === waveMode ? [
+    { x: startTx, type: "mini" }
+    ] : (level >= 25 && level <= 100 ? [
+    { x: startTx + 45 * es, type: "mini" }
+    ] : []);
+    seededRandom = mulberry32(getLevelSeed(level));
+    lastSlopeDirection = 1; consecutiveSegments = 0; spamCounter = 0; consecutiveOneSegmentSlopes = 0;
+    while (slopeCount === 0 || slopeX[slopeCount - 1] < endWorldX) {
+    const before = slopeCount;
+    generateNewSlopeSegment();
+    if (slopeCount === before) break;
+    }
+    const Np = slopeCount;
+    const SX = new Float64Array(slopeX.subarray(0, Np));
+    const SCY = new Float32Array(slopeCenterY.subarray(0, Np));
+    const SH = new Float32Array(slopeHeight.subarray(0, Np));
+    const SW = switchPoints.map(p => ({ x: p.x, type: p.type }));
+    const endX = endWorldX;
+
+    slopeX = sv.slopeX; slopeCenterY = sv.slopeCenterY; slopeHeight = sv.slopeHeight;
+    slopeCapacity = sv.slopeCapacity; slopeCount = sv.slopeCount; slopeHead = sv.slopeHead;
+    switchPoints = sv.switchPoints; startTx = sv.startTx; endWorldX = sv.endWorldX;
+    currentScrollSpeed = sv.currentScrollSpeed; levelPrecision = sv.levelPrecision; levelSpeed = sv.levelSpeed;
+    seededRandom = sv.seededRandom; lastSlopeDirection = sv.lastSlopeDirection;
+    consecutiveSegments = sv.consecutiveSegments; spamCounter = sv.spamCounter;
+    consecutiveOneSegmentSlopes = sv.consecutiveOneSegmentSlopes;
+    miniwaveHeightMul = sv.miniwaveHeightMul;
+
+    if (Np < 3) return null;
+
+    function segIndexAt(x) {
+    let n = 0, r = Np - 2;
+    while (n < r) { const i = (n + r + 1) >> 1; if (SX[i] <= x) n = i; else r = i - 1; }
+    return n;
+    }
+    function isMiniAt(x) {
+    let m = false;
+    for (let i = 0; i < SW.length; i++) if (x >= SW[i].x - 0.01) m = (SW[i].type === "mini");
+    return m;
+    }
+    function boundsAt(x) {
+    if (x < SX[0] || x > SX[Np - 1]) return { top: -500, bottom: 500 };
+    const i = segIndexAt(x);
+    const s = (x - SX[i]) / (SX[i + 1] - SX[i]);
+    const cy = SCY[i] + s * (SCY[i + 1] - SCY[i]);
+    const h = SH[i] + s * (SH[i + 1] - SH[i]);
+    return { top: cy - h / 2, bottom: cy + h / 2 };
+    }
+    function corridorDirAt(x) {
+    if (x >= SX[Np - 1]) return 0;
+    const i = segIndexAt(x);
+    return SCY[i + 1] > SCY[i] ? 1 : (SCY[i + 1] < SCY[i] ? -1 : 0);
+    }
+    function safeAt(x, y) {
+    const e2 = isMiniAt(x) ? 0.7825 : 1.565; //hitboxcoderighthere
+    const rHard = 40 * e2 / 2;
+    if (y - rHard < -400 || y + rHard > 400) return false;
+    const b = boundsAt(x);
+    const rSlope = 40 * e2 * 0.28;
+    if (y - rSlope < b.top || y + rSlope > b.bottom) return false;
+    return true;
+    }
+    function simStraight(x, y, holding, endXX) {
+    const dx = ANALYZE_DX;
+    while (x < endXX - 1e-6) {
+    let xn = x + dx; if (xn > endXX) xn = endXX;
+    const step = xn - x;
+    const slope = isMiniAt(x) ? 2 : 1;
+    const yn = holding ? y - slope * step : y + slope * step;
+    if (!safeAt(xn, yn)) return { alive: false, y };
+    y = yn; x = xn;
+    }
+    return { alive: true, y };
+    }
+
+    let rx = SX[0], ry = SCY[0];
+    let rHold = SCY[1] < SCY[0];
+    const W = [{ x: rx, y: ry, holding: rHold }];
+    let refAlive = true;
+    while (rx < endX - 1e-6) {
+    let xn = rx + ANALYZE_DX; if (xn > endX) xn = endX;
+    const step = xn - rx;
+    const slope = isMiniAt(rx) ? 2 : 1;
+    const yn = rHold ? ry - slope * step : ry + slope * step;
+    if (!safeAt(xn, yn)) { refAlive = false; break; }
+    const targetH = corridorDirAt(xn) < 0;
+    if (targetH !== rHold) {
+    rHold = targetH;
+    W.push({ x: xn, y: yn, holding: rHold });
+    }
+    ry = yn; rx = xn;
+    }
+    if (!refAlive || W.length < 2) return null;
+
+    const msPerUnit = 1 / speedMs;
+    const reg = [], mini = [];
+    const nFlips = W.length - 1;
+    for (let k = 1; k <= nFlips; k++) {
+    const pre = W[k - 1];
+    const xk = W[k].x;
+    const xPrev = W[k - 1].x;
+    const xNext = (k + 1 <= nFlips) ? W[k + 1].x : endX;
+    const survives = (tx) => {
+    if (tx <= xPrev + 1e-6 || tx >= xNext - 1e-6) return false;
+    const a = simStraight(pre.x, pre.y, pre.holding, tx);
+    if (!a.alive) return false;
+    const b = simStraight(tx, a.y, !pre.holding, xNext);
+    return b.alive;
+    };
+    let lo = xPrev, hi = xk, eBest = xk;
+    for (let it = 0; it < wIters; it++) {
+    const mid = (lo + hi) / 2;
+    if (survives(mid)) { eBest = mid; hi = mid; } else lo = mid;
+    }
+    lo = xk; hi = xNext; let lBest = xk;
+    for (let it = 0; it < wIters; it++) {
+    const mid = (lo + hi) / 2;
+    if (survives(mid)) { lBest = mid; lo = mid; } else hi = mid;
+    }
+    const windowX = Math.max(0, lBest - eBest);
+    const ms = windowX * msPerUnit;
+    if (isMiniAt(xk)) mini.push(ms); else reg.push(ms);
+    }
+
+    const all = reg.concat(mini);
+    if (!all.length) return null;
+    const avg = a => a.reduce((s, v) => s + v, 0) / a.length;
+    return {
+    overall: avg(all),
+    regular: reg.length ? avg(reg) : null,
+    mini: mini.length ? avg(mini) : null,
+    min: Math.min.apply(null, all),
+    clicks: all.length,
+    regClicks: reg.length,
+    miniClicks: mini.length,
+    mul: mul
+    };
+    }
+
+    let _miniMulCache = {};
+    function invalidateMiniMulCache() {
+    for (const k in _miniMulCache) delete _miniMulCache[k];
+    }
+
+    function analyzePrecision(level) {
+    return analyzeLevel(level, getMiniwaveMul(level), 20);
+    }
+
+    function getMiniwaveMul(level) {
+    if (Object.prototype.hasOwnProperty.call(_miniMulCache, level)) {
+    return _miniMulCache[level];
+    }
+    let m = 1.6;
+    try { m = computeOptimalMiniMul(level); } catch (e) { m = 1.6; }
+    if (!isFinite(m) || m <= 0) m = 1.6;
+    _miniMulCache[level] = m;
+    return m;
+    }
+
+    function computeOptimalMiniMul(level) {
+    const ITERS = 12;
+    const r0 = analyzeLevel(level, 1.6, ITERS);
+    if (!r0 || r0.regular == null || r0.mini == null) return 1.6;
+    const target = r0.regular;
+    let best = { m: 1.6, diff: Math.abs(r0.mini - target) };
+    let lo = 1.0, hi = 4.0;
+    for (let i = 0; i < 14; i++) {
+    const mid = (lo + hi) / 2;
+    const r = analyzeLevel(level, mid, ITERS);
+    if (!r || r.mini == null) { lo = mid; continue; }
+    const diff = Math.abs(r.mini - target);
+    if (diff < best.diff) best = { m: mid, diff };
+    if (r.mini < target) lo = mid; else hi = mid;
+    }
+    return best.m;
+    }
+
+    btnAnalyze.addEventListener("click", () => {
+    if (btnAnalyze.dataset.busy) return;
+    btnAnalyze.dataset.busy = "1";
+    const prev = btnAnalyze.textContent;
+    btnAnalyze.textContent = "CALCULATING…";
+    setTimeout(() => {
+    let res = null, failed = false;
+    try { res = analyzePrecision(currentLevel); } catch (ex) { failed = true; }
+    btnAnalyze.textContent = prev;
+    delete btnAnalyze.dataset.busy;
+    const fmt = v => (v == null || !isFinite(v)) ? null : v.toFixed(1);
+    const setMs = (el, v) => {
+    const f = fmt(v);
+    el.innerHTML = f === null ? "—" : (f + '<span class="unit">ms</span>');
+    };
+    if (res) {
+    const mul = getMiniwaveMul(currentLevel);
+    setMs(anOverall, res.overall);
+    setMs(anRegular, res.regular);
+    setMs(anMini, res.mini);
+    setMs(anMin, res.min);
+    anMul.innerHTML = mul.toFixed(2) + '<span class="unit">×</span>';
+    anClicks.textContent = res.clicks;
+    anNote.textContent = "Lower = tighter timing. A perfect, centered run is simulated and each value is the average milliseconds of slack a click/hold can be off (early or late) and still survive. Regular: " + res.regClicks + " clicks · Mini: " + res.miniClicks + " clicks. The mini tunnel height is auto-tuned to " + mul.toFixed(2) + "× per level so the mini click window matches the regular wave window.";
+    analyzeResults.style.display = "block";
+    } else {
+    anOverall.textContent = "—";
+    anRegular.textContent = "—";
+    anMini.textContent = "—";
+    anMul.textContent = "—";
+    anMin.textContent = "—";
+    anClicks.textContent = "—";
+    anNote.textContent = failed ? "Could not analyze this level." : "No timed inputs required.";
+    analyzeResults.style.display = "block";
+    }
+    }, 20);
+    });
+
+    window.addEventListener("resize", fit);
+    let botMode = false;
+    let secretBuffer = "";
+    document.addEventListener("keydown", e => {
+    if (e.key && e.key.length === 1) {
+    secretBuffer += e.key.toLowerCase();
+    if (secretBuffer.length > 20) secretBuffer = secretBuffer.slice(-20);
+    if (secretBuffer.endsWith("bbc123") && gameState === "LEVELS_MENU") {
+    secretBuffer = "";
+    botMode = !botMode;
+    let titleEl = document.querySelector("#levels-screen h1");
+    if (botMode) {
+    titleEl.textContent = titleEl.textContent.replace(/E/gi, '3');
+    } else {
+    titleEl.textContent = titleEl.textContent.replace(/3/g, 'E');
+    }
+    }
+    }
+    if (isRebindingKey) return e.preventDefault(), "Escape" !== e.code && (customKey = e.code, localStorage.setItem("wave_custom_key", customKey)), isRebindingKey = false, void updateKeybindUI();
+    const isActionKey = "ArrowUp" === e.code || "Space" === e.code || e.code === customKey;
+    if ("Escape" === e.code && ("LEVELS_PLAYING" === gameState || "GAMEOVER" === gameState || "LEVELS_COUNTDOWN" === gameState || "WIN" === gameState || "WIN_ANIM" === gameState)) {
+    e.preventDefault();
+    switchState("LEVELS_MENU");
+    } else if (isActionKey) {
+    e.preventDefault();
+    if (!e.repeat) recordInput(!0);
+    }
+    });
+    document.addEventListener("keyup", e => {
+    const isActionKey = "ArrowUp" === e.code || "Space" === e.code || e.code === customKey;
+    if (isActionKey) {
+    e.preventDefault();
+    recordInput(!1);
+    }
+    });
+    document.body.addEventListener("mousedown", e => {
+    if ("LEVELS_PLAYING" === gameState) e.preventDefault();
+    recordInput(!0);
+    });
+    document.body.addEventListener("mouseup", e => {
+    if ("LEVELS_PLAYING" === gameState) e.preventDefault();
+    recordInput(!1);
+    });
+    document.body.addEventListener("touchstart", e => {
+    "LEVELS_PLAYING" === gameState && e.preventDefault(), recordInput(!0)
+    }, {
+    passive: !1
+    });
+    document.body.addEventListener("touchend", e => {
+    "LEVELS_PLAYING" === gameState && e.preventDefault(), recordInput(!1)
+    }, {
+    passive: !1
+    });
+    updateLevelUI();
+    requestAnimationFrame(update)
+  </script>
+</html>
