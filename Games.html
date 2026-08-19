@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games</title>
+    <style>
+        :root {
+            --bg: #09090b;
+            --surface: #121215;
+            --surface-hover: #1c1c21;
+            --border: #27272a;
+            --border-hover: #3f3f46;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --text-subtle: #71717a;
+            --accent: #ffffff;
+            --accent-text: #000000;
+            --chip-bg: #18181b;
+            --chip-border: #27272a;
+            --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px 60px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 120px);
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-style: italic;
+            font-family: var(--font-mono);
+            background: var(--chip-bg);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--chip-border);
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            color: inherit;
+            font: inherit;
+        }
+
+        .file-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+            background: var(--surface-hover);
+        }
+
+        .file-card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: var(--chip-bg);
+            border: 1px solid var(--chip-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+
+        .file-details {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--chip-bg);
+            border: 1px solid var(--chip-border);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .file-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            font-family: var(--font-sans);
+            white-space: nowrap;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+            pointer-events: none;
+        }
+
+        .file-card:hover .btn-primary {
+            opacity: 0.92;
+        }
+
+        footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-subtle);
+            font-family: var(--font-mono);
+        }
+
+        footer a {
+            color: var(--text-muted);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover {
+            color: var(--text-main);
+        }
+
+        .skeleton-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .skeleton-pulse {
+            background: linear-gradient(90deg, var(--chip-bg) 25%, var(--border) 50%, var(--chip-bg) 75%);
+            background-size: 200% 100%;
+            animation: pulse 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .state-box {
+            text-align: center;
+            padding: 48px 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            margin-top: 20px;
+        }
+
+        .state-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--chip-bg);
+            border: 1px solid var(--chip-border);
+        }
+
+        .state-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .state-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 400px;
+            margin: 0 auto 20px;
+            font-family: var(--font-mono);
+        }
+
+        @media (max-width: 540px) {
+            body {
+                padding: 30px 14px 40px;
+            }
+            .file-card {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+            }
+            .file-actions {
+                width: 100%;
+            }
+            .file-actions .btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <header>
+                <h1>Hi here's all my games</h1>
+                <p class="subtitle">better to put all disk in one disk so less disk</p>
+            </header>
+
+            <div id="skeleton-container" class="file-list">
+                <div class="skeleton-card">
+                    <div style="display:flex; align-items:center; gap:14px; width:60%;">
+                        <div class="skeleton-pulse" style="width:40px; height:40px; border-radius:10px;"></div>
+                        <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                            <div class="skeleton-pulse" style="width:70%; height:16px;"></div>
+                            <div class="skeleton-pulse" style="width:40%; height:12px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-pulse" style="width:110px; height:34px; border-radius:8px;"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div style="display:flex; align-items:center; gap:14px; width:50%;">
+                        <div class="skeleton-pulse" style="width:40px; height:40px; border-radius:10px;"></div>
+                        <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                            <div class="skeleton-pulse" style="width:80%; height:16px;"></div>
+                            <div class="skeleton-pulse" style="width:30%; height:12px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-pulse" style="width:110px; height:34px; border-radius:8px;"></div>
+                </div>
+            </div>
+
+            <div id="file-container" class="file-list" style="display: none;"></div>
+            <div id="state-container" style="display: none;"></div>
+        </div>
+
+        <footer>
+            Made by Clifton Roberson. Contact at <a href="mailto:clifton.roberson@utstudents.net">clifton.roberson@utstudents.net</a>
+        </footer>
+    </div>
+
+    <script>
+        const owner = 'crobperson';
+        const repo = 'Games';
+        const apiRoot = `https://api.github.com/repos/${owner}/${repo}/contents`;
+        const skipNames = new Set([
+            'readme.md',
+            'license',
+            'license.md',
+            '.gitignore',
+            '.gitattributes'
+        ]);
+
+        function formatBytes(bytes, decimals = 1) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function fileExt(name) {
+            const i = name.lastIndexOf('.');
+            return i > 0 ? name.slice(i + 1).toLowerCase() : '';
+        }
+
+        function isHtmlFile(name) {
+            const ext = fileExt(name);
+            return ext === 'html' || ext === 'htm';
+        }
+
+        async function listAllFiles(path = '') {
+            const url = path ? `${apiRoot}/${path}` : apiRoot;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`GitHub API HTTP ${response.status}: ${response.statusText}`);
+            }
+            const items = await response.json();
+            if (!Array.isArray(items)) {
+                throw new Error('Unexpected GitHub API response.');
+            }
+
+            const files = [];
+            for (const item of items) {
+                if (item.type === 'file') {
+                    if (!skipNames.has(item.name.toLowerCase())) {
+                        files.push(item);
+                    }
+                } else if (item.type === 'dir') {
+                    const nested = await listAllFiles(item.path);
+                    files.push(...nested);
+                }
+            }
+            return files;
+        }
+
+        async function fetchRepoFiles() {
+            const skeletonEl = document.getElementById('skeleton-container');
+            const containerEl = document.getElementById('file-container');
+            const stateEl = document.getElementById('state-container');
+
+            skeletonEl.style.display = 'flex';
+            containerEl.style.display = 'none';
+            stateEl.style.display = 'none';
+
+            try {
+                const files = await listAllFiles();
+                files.sort((a, b) => a.path.localeCompare(b.path, undefined, { sensitivity: 'base' }));
+
+                skeletonEl.style.display = 'none';
+
+                if (files.length === 0) {
+                    showState('No Files Found', 'No files were discovered in the repository.');
+                    return;
+                }
+
+                renderFileList(files);
+            } catch (error) {
+                console.error(error);
+                skeletonEl.style.display = 'none';
+                showState('Failed to Load Repository', error.message, true);
+            }
+        }
+
+        function renderFileList(filesToRender) {
+            const containerEl = document.getElementById('file-container');
+            const stateEl = document.getElementById('state-container');
+
+            containerEl.innerHTML = '';
+            stateEl.style.display = 'none';
+            containerEl.style.display = 'flex';
+
+            filesToRender.forEach(file => {
+                const ext = fileExt(file.name);
+                const tag = ext || 'file';
+                const pathLabel = file.path !== file.name ? file.path : '';
+
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'file-card';
+                card.title = `Open ${file.name} in a new tab`;
+
+                card.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="file-details">
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-meta">
+                                <span class="tag">${escapeHtml(tag)}</span>
+                                <span>•</span>
+                                <span>${formatBytes(file.size)}</span>
+                                ${pathLabel ? `<span>•</span><span>${escapeHtml(pathLabel)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <span class="btn btn-primary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                            <span>Open</span>
+                        </span>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => openFileInNewTab(file));
+                containerEl.appendChild(card);
+            });
+        }
+
+        function loadingDocument(fileName) {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading ${escapeHtml(fileName)}</title>
+    <style>
+        html, body { margin: 0; height: 100%; background: #09090b; color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        .spin { width: 28px; height: 28px; border: 2px solid #27272a; border-top-color: #f4f4f5; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        h1 { font-size: 16px; font-weight: 500; margin: 0; }
+        p { margin: 0; color: #a1a1aa; font-size: 13px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="spin"></div>
+        <h1>Loading ${escapeHtml(fileName)}…</h1>
+        <p>Opening in this tab</p>
+    </div>
+</body>
+</html>`;
+        }
+
+        function injectBaseHref(htmlContent, baseHref) {
+            const baseTag = `<base href="${baseHref}">`;
+            if (/<head[^>]*>/i.test(htmlContent)) {
+                return htmlContent.replace(/<head[^>]*>/i, (match) => `${match}${baseTag}`);
+            }
+            if (/<html[^>]*>/i.test(htmlContent)) {
+                return htmlContent.replace(/<html[^>]*>/i, (match) => `${match}<head>${baseTag}</head>`);
+            }
+            return baseTag + htmlContent;
+        }
+
+        async function openFileInNewTab(file) {
+            const newWin = window.open('about:blank', '_blank');
+            if (!newWin) {
+                alert('Allow pop-ups to open files in a new tab.');
+                return;
+            }
+
+            newWin.document.open();
+            newWin.document.write(loadingDocument(file.name));
+            newWin.document.close();
+
+            try {
+                const response = await fetch(file.download_url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                if (isHtmlFile(file.name)) {
+                    let htmlContent = await response.text();
+                    const baseHref = file.download_url.substring(0, file.download_url.lastIndexOf('/') + 1);
+                    htmlContent = injectBaseHref(htmlContent, baseHref);
+                    newWin.document.open();
+                    newWin.document.write(htmlContent);
+                    newWin.document.close();
+                    return;
+                }
+
+                const blob = await response.blob();
+                const typed = blob.type && blob.type !== 'text/plain'
+                    ? blob
+                    : new Blob([blob], { type: guessMime(file.name) });
+                const objectUrl = URL.createObjectURL(typed);
+                newWin.location.replace(objectUrl);
+                setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+            } catch (error) {
+                console.error(error);
+                newWin.document.open();
+                newWin.document.write(`<!DOCTYPE html><html><body style="font-family:sans-serif;background:#09090b;color:#f4f4f5;padding:40px;">
+                    <h1 style="font-size:18px;">Could not open ${escapeHtml(file.name)}</h1>
+                    <p style="color:#a1a1aa;">${escapeHtml(error.message)}</p>
+                    <p><a href="${escapeHtml(file.html_url)}" style="color:#fff;">View on GitHub</a></p>
+                </body></html>`);
+                newWin.document.close();
+            }
+        }
+
+        function guessMime(name) {
+            const map = {
+                html: 'text/html',
+                htm: 'text/html',
+                css: 'text/css',
+                js: 'text/javascript',
+                json: 'application/json',
+                txt: 'text/plain',
+                md: 'text/plain',
+                png: 'image/png',
+                jpg: 'image/jpeg',
+                jpeg: 'image/jpeg',
+                gif: 'image/gif',
+                webp: 'image/webp',
+                svg: 'image/svg+xml',
+                mp3: 'audio/mpeg',
+                wav: 'audio/wav',
+                mp4: 'video/mp4',
+                webm: 'video/webm',
+                pdf: 'application/pdf'
+            };
+            return map[fileExt(name)] || 'application/octet-stream';
+        }
+
+        function showState(title, description, isError = false) {
+            const stateEl = document.getElementById('state-container');
+            stateEl.style.display = 'block';
+            stateEl.className = 'state-box';
+
+            stateEl.innerHTML = `
+                <div class="state-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        ${isError
+                            ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
+                            : '<circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line>'}
+                    </svg>
+                </div>
+                <div class="state-title">${escapeHtml(title)}</div>
+                <div class="state-desc">${escapeHtml(description)}</div>
+                ${isError ? '<button class="btn" style="background:#18181b;color:#f4f4f5;border:1px solid #27272a;" onclick="fetchRepoFiles()">Try Again</button>' : ''}
+            `;
+        }
+
+        fetchRepoFiles();
+    </script>
+</body>
+</html>
