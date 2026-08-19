@@ -541,13 +541,116 @@
 
         function injectBaseHref(htmlContent, baseHref) {
             const baseTag = `<base href="${baseHref}">`;
-            if (/<head[^>]*>/i.test(htmlContent)) {
-                return htmlContent.replace(/<head[^>]*>/i, (match) => `${match}${baseTag}`);
+            // The lookahead keeps this from matching "<header ...>" inside a
+            // game's markup (the old "<head[^>]*>" pattern matched <header>
+            // and dumped the <base> tag in the middle of the page body).
+            if (/<head(?=[\s>])[^>]*>/i.test(htmlContent)) {
+                return htmlContent.replace(/<head(?=[\s>])[^>]*>/i, (match) => `${match}${baseTag}`);
             }
             if (/<html[^>]*>/i.test(htmlContent)) {
                 return htmlContent.replace(/<html[^>]*>/i, (match) => `${match}<head>${baseTag}</head>`);
             }
             return baseTag + htmlContent;
+        }
+
+        // Some games are fully self-contained offline bundles: every asset is
+        // embedded as a data URI and the page installs its own fetch/XHR shim
+        // that serves matching URLs straight from the embedded map. The shim
+        // only accepts URLs on the game's own host (or plain relative URLs),
+        // so pointing the <base> at the GitHub repo breaks them: the game
+        // absolutizes asset URLs against raw.githubusercontent.com, the shim
+        // rejects the foreign host, and the request falls through to the
+        // network where it 404s. Detect such bundles and the host their shim
+        // expects so we can give them the right <base>.
+        function detectOfflineBundle(htmlContent) {
+            // Marker: the embedded-assets map the shim serves from.
+            if (!/\bvar\s+ASSETS\s*=\s*\{/.test(htmlContent)) return null;
+            // The shim's URL resolver hardcodes its own host, e.g.
+            //   if (host && host !== 'shellshock.io' && host !== 'www.shellshock.io') return null;
+            const hostMatch = /host\s*&&\s*host\s*!==\s*'([^']+)'/.exec(htmlContent);
+            if (!hostMatch) return null;
+            return { host: hostMatch[1] };
+        }
+
+        function injectOfflinePatch(htmlContent, offlineBundle, downloadUrl) {
+            let repoPrefix = '';
+            try {
+                const pathname = new URL(downloadUrl).pathname;
+                repoPrefix = pathname.slice(0, pathname.lastIndexOf('/') + 1);
+            } catch (e) {}
+
+            // This runs inside the game tab (injected just before </body>,
+            // i.e. after all of the game's own inline scripts). If the game
+            // installed its offline FakeXHR, wrap fetch/XHR so that any
+            // absolute raw.githubusercontent.com URL (absolutized against a
+            // repo <base>) is rewritten to the game's own host before it
+            // reaches the shim. The shim then serves it from the embedded
+            // asset map instead of 404ing on the network.
+            const patch = `<script>
+/* Injected by the Games loader. */
+(function () {
+    if (window.__gamesLoaderOfflinePatch) return;
+    try {
+        if (!window.XMLHttpRequest || window.XMLHttpRequest.name !== 'FakeXHR') return;
+    } catch (e) { return; }
+    window.__gamesLoaderOfflinePatch = true;
+
+    var GAME_HOST = ${JSON.stringify(offlineBundle.host)};
+    var REPO_PREFIX = ${JSON.stringify(repoPrefix)};
+
+    function rewriteUrl(u) {
+        if (typeof u !== 'string' || !u) return u;
+        try {
+            var url = new URL(u);
+            if (url.hostname !== 'raw.githubusercontent.com') return u;
+            var p = url.pathname || '/';
+            if (REPO_PREFIX && p.indexOf(REPO_PREFIX) === 0) p = p.slice(REPO_PREFIX.length);
+            url.hostname = GAME_HOST;
+            url.protocol = 'https:';
+            url.pathname = '/' + p.replace(/^\\/+/, '');
+            return url.href;
+        } catch (e) {
+            return u;
+        }
+    }
+
+    var gameFetch = window.fetch;
+    if (typeof gameFetch === 'function') {
+        window.fetch = function (input, init) {
+            if (typeof input === 'string') return gameFetch(rewriteUrl(input), init);
+            if (input && typeof input === 'object' && typeof input.url === 'string') {
+                try {
+                    return gameFetch(new Request(rewriteUrl(input.url), input), init);
+                } catch (e) {}
+            }
+            return gameFetch(input, init);
+        };
+    }
+
+    try {
+        var GameXHR = window.XMLHttpRequest;
+        var PatchedXHR = function () {
+            var xhr = new GameXHR();
+            var origOpen = xhr.open;
+            xhr.open = function (method, url, async) {
+                return origOpen.call(this, method, rewriteUrl(url), async);
+            };
+            return xhr;
+        };
+        PatchedXHR.prototype = GameXHR.prototype;
+        for (var k in GameXHR) {
+            if (Object.prototype.hasOwnProperty.call(GameXHR, k)) PatchedXHR[k] = GameXHR[k];
+        }
+        window.XMLHttpRequest = PatchedXHR;
+    } catch (e) {}
+})();
+</scr` + `ipt>`;
+
+            const bodyEnd = htmlContent.lastIndexOf('</body>');
+            if (bodyEnd !== -1) {
+                return htmlContent.slice(0, bodyEnd) + patch + htmlContent.slice(bodyEnd);
+            }
+            return htmlContent + patch;
         }
 
         async function openFileInNewTab(file) {
@@ -569,8 +672,22 @@
 
                 if (isHtmlFile(file.name)) {
                     let htmlContent = await response.text();
-                    const baseHref = file.download_url.substring(0, file.download_url.lastIndexOf('/') + 1);
+
+                    // Self-contained offline bundles (like Shellshockers) embed
+                    // all their assets and serve them through their own
+                    // fetch/XHR shim, which only accepts URLs on the game's
+                    // own host. Give those pages a <base> on that host instead
+                    // of the GitHub repo, so asset URLs the game absolutizes
+                    // still resolve through the shim's embedded map.
+                    const offlineBundle = detectOfflineBundle(htmlContent);
+                    const baseHref = offlineBundle
+                        ? `https://${offlineBundle.host}/`
+                        : file.download_url.substring(0, file.download_url.lastIndexOf('/') + 1);
                     htmlContent = injectBaseHref(htmlContent, baseHref);
+                    if (offlineBundle) {
+                        htmlContent = injectOfflinePatch(htmlContent, offlineBundle, file.download_url);
+                    }
+
                     newWin.document.open();
                     newWin.document.write(htmlContent);
                     newWin.document.close();
@@ -646,5 +763,5 @@
         fetchRepoFiles();
         })();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2d749126a734c99',t:'MTc4NzEyMjg3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2d749126a734c99',t:'MTc4NzEyMjg3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2d8ed45fdefe811',t:'MTc4NzE0MDA4MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
