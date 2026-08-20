@@ -1,0 +1,217 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Todo</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><style>:root{--bg:#EEF1F5;--card:#FFFFFF;--ink:#1B1F3B;--ink-soft:#5B6178;--muted:#94A3B8;--teal:#2A9D8F;--teal-dim:#DCEFEC;--coral:#E76F51;--coral-dim:#FBE7E1;--line:#E2E6ED;--radius:14px}*{box-sizing:border-box}body,html{height:100%}body{margin:0;background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgba(27,31,59,.05) 1px,transparent 0);background-size:22px 22px;color:var(--ink);font-family:Inter,sans-serif;min-height:100vh;padding:48px 20px 80px}.wrap{max-width:760px;margin:0 auto}header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px;flex-wrap:wrap;gap:12px}h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;letter-spacing:-.02em;margin:0;display:flex;align-items:center;gap:10px}h1 .dot{width:12px;height:12px;border-radius:50%;background:var(--teal);display:inline-block}.meta{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-soft)}.add-section-row{display:flex;gap:8px;margin-bottom:32px}.add-section-row input{flex:1;border:1.5px dashed var(--muted);background:0 0;border-radius:10px;padding:12px 14px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--ink);outline:0;transition:border-color .15s,background .15s}.add-section-row input::placeholder{color:var(--muted);font-weight:500}.add-section-row input:focus{border-color:var(--teal);border-style:solid;background:var(--card)}.add-section-row button{border:none;background:var(--ink);color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;padding:0 20px;border-radius:10px;cursor:pointer;transition:transform .1s,background .15s}.add-section-row button:hover{background:var(--teal)}.add-section-row button:active{transform:scale(.96)}.section{background:var(--card);border-radius:var(--radius);margin:0 0 24px;box-shadow:0 1px 2px rgba(27,31,59,.06),0 8px 24px -12px rgba(27,31,59,.12);overflow:hidden;position:relative}.section::before{content:attr(data-label);display:inline-block;margin:16px 0 0 20px;vertical-align:top;line-height:16px;white-space:nowrap;background:var(--teal);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;padding:3px 9px;border-radius:999px;text-transform:uppercase}.section-head{display:flex;align-items:center;justify-content:space-between;padding:8px 20px 14px;gap:12px}.section-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.01em}.section-title[contenteditable]:focus{outline:0;border-bottom:1.5px solid var(--teal)}.section-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);white-space:nowrap}.section-remove{border:none;background:0 0;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:4px 6px;border-radius:6px;transition:color .15s,background .15s}.section-remove:hover{color:var(--coral);background:var(--coral-dim)}ul.tasks{list-style:none;margin:0;padding:0 10px 10px}li.task{display:flex;align-items:flex-start;gap:12px;padding:10px 10px;border-radius:10px;transition:background .12s}li.task:hover{background:#f7f9fb}.check{flex:none;width:21px;height:21px;border-radius:6px;border:1.8px solid var(--muted);margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#fff;transition:background .15s,border-color .15s}.check svg{width:13px;height:13px;opacity:0;transition:opacity .1s}li.task.done .check{background:var(--teal);border-color:var(--teal)}li.task.done .check svg{opacity:1}.task-text{flex:1;font-size:15px;line-height:1.45;padding-top:1px;word-break:break-word;outline:0}li.task.done .task-text{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}.task-remove{flex:none;border:none;background:0 0;color:var(--muted);opacity:0;cursor:pointer;font-size:15px;padding:3px 6px;border-radius:6px;transition:opacity .12s,color .15s,background .15s}li.task:hover .task-remove{opacity:1}.task-remove:hover{color:var(--coral);background:var(--coral-dim)}.add-task-row{display:flex;align-items:center;gap:10px;padding:8px 20px 20px}.add-task-row .plus{flex:none;width:21px;height:21px;border-radius:6px;border:1.8px dashed var(--muted);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}.add-task-row input{flex:1;border:none;background:0 0;font-size:15px;font-family:Inter,sans-serif;outline:0;color:var(--ink);padding:6px 0}.add-task-row input::placeholder{color:var(--muted)}.empty-state{text-align:center;padding:60px 20px;color:var(--ink-soft)}.empty-state h2{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0 0 6px}.empty-state p{font-size:14px;color:var(--muted);margin:0}@media (max-width:480px){h1{font-size:26px}body{padding:32px 14px 60px}}</style></head><body><div class="wrap"><header><h1><span class="dot"></span>Todo List thing</h1><div class="meta" id="totalsMeta">0 open · 0 done</div></header><div class="add-section-row"><input type="text" id="newSectionInput" placeholder="Name a new section" maxlength="60"><button id="addSectionBtn">Add section</button></div><div id="sectionsContainer"></div><div class="empty-state" id="emptyState" style="display:none"><h2>I'm positive you have other things to do besides reading this.</h2><p>Add a section above to start a list.</p></div></div><script>(function(){
+  const STORAGE_KEY = 'ledger-todo-data-v1';
+  const container = document.getElementById('sectionsContainer');
+  const emptyState = document.getElementById('emptyState');
+  const totalsMeta = document.getElementById('totalsMeta');
+  const newSectionInput = document.getElementById('newSectionInput');
+  const addSectionBtn = document.getElementById('addSectionBtn');
+
+  let state = loadState();
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){ console.warn('Could not load saved list', e); }
+    return {
+      sections: [
+        { id: uid(), title: 'Today', tasks: [
+          { id: uid(), text: 'Add your first task', done: false }
+        ]}
+      ]
+    };
+  }
+
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ console.warn('Could not save list', e); }
+  }
+
+  function uid(){
+    return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  }
+
+  function addSection(title){
+    const clean = title.trim();
+    if(!clean) return;
+    state.sections.push({ id: uid(), title: clean, tasks: [] });
+    saveState();
+    render();
+  }
+
+  function removeSection(sectionId){
+    state.sections = state.sections.filter(s => s.id !== sectionId);
+    saveState();
+    render();
+  }
+
+  function renameSection(sectionId, title){
+    const s = state.sections.find(s => s.id === sectionId);
+    if(s) s.title = title.trim() || s.title;
+    saveState();
+  }
+
+  function addTask(sectionId, text){
+    const clean = text.trim();
+    if(!clean) return;
+    const s = state.sections.find(s => s.id === sectionId);
+    if(!s) return;
+    s.tasks.push({ id: uid(), text: clean, done: false });
+    saveState();
+    render();
+  }
+
+  function toggleTask(sectionId, taskId){
+    const s = state.sections.find(s => s.id === sectionId);
+    if(!s) return;
+    const t = s.tasks.find(t => t.id === taskId);
+    if(!t) return;
+    t.done = !t.done;
+    saveState();
+    render();
+  }
+
+  function removeTask(sectionId, taskId){
+    const s = state.sections.find(s => s.id === sectionId);
+    if(!s) return;
+    s.tasks = s.tasks.filter(t => t.id !== taskId);
+    saveState();
+    render();
+  }
+
+  function editTaskText(sectionId, taskId, text){
+    const s = state.sections.find(s => s.id === sectionId);
+    if(!s) return;
+    const t = s.tasks.find(t => t.id === taskId);
+    if(!t) return;
+    const clean = text.trim();
+    if(clean) t.text = clean;
+    saveState();
+  }
+
+  function render(){
+    container.innerHTML = '';
+
+    if(state.sections.length === 0){
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+    }
+
+    let totalOpen = 0, totalDone = 0;
+
+    state.sections.forEach(section => {
+      const open = section.tasks.filter(t => !t.done).length;
+      const done = section.tasks.filter(t => t.done).length;
+      totalOpen += open; totalDone += done;
+
+      const sectionEl = document.createElement('div');
+      sectionEl.className = 'section';
+      sectionEl.dataset.label = `${done}/${section.tasks.length}`;
+
+      const head = document.createElement('div');
+      head.className = 'section-head';
+
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.contentEditable = 'true';
+      title.spellcheck = false;
+      title.textContent = section.title;
+      title.addEventListener('blur', () => renameSection(section.id, title.textContent));
+      title.addEventListener('keydown', e => {
+        if(e.key === 'Enter'){ e.preventDefault(); title.blur(); }
+      });
+
+      const rightWrap = document.createElement('div');
+      rightWrap.style.display = 'flex';
+      rightWrap.style.alignItems = 'center';
+      rightWrap.style.gap = '10px';
+
+      const count = document.createElement('div');
+      count.className = 'section-count';
+      count.textContent = `${open} open`;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'section-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Delete section';
+      removeBtn.addEventListener('click', () => removeSection(section.id));
+
+      rightWrap.appendChild(count);
+      rightWrap.appendChild(removeBtn);
+      head.appendChild(title);
+      head.appendChild(rightWrap);
+
+      const list = document.createElement('ul');
+      list.className = 'tasks';
+
+      section.tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'task' + (task.done ? ' done' : '');
+
+        const check = document.createElement('div');
+        check.className = 'check';
+        check.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        check.addEventListener('click', () => toggleTask(section.id, task.id));
+
+        const text = document.createElement('div');
+        text.className = 'task-text';
+        text.contentEditable = 'true';
+        text.spellcheck = false;
+        text.textContent = task.text;
+        text.addEventListener('blur', () => editTaskText(section.id, task.id, text.textContent));
+        text.addEventListener('keydown', e => {
+          if(e.key === 'Enter'){ e.preventDefault(); text.blur(); }
+        });
+
+        const del = document.createElement('button');
+        del.className = 'task-remove';
+        del.innerHTML = '&times;';
+        del.title = 'Delete task';
+        del.addEventListener('click', () => removeTask(section.id, task.id));
+
+        li.appendChild(check);
+        li.appendChild(text);
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+
+      const addRow = document.createElement('div');
+      addRow.className = 'add-task-row';
+      const plus = document.createElement('div');
+      plus.className = 'plus';
+      plus.textContent = '+';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Add a task and press Enter';
+      input.addEventListener('keydown', e => {
+        if(e.key === 'Enter'){
+          addTask(section.id, input.value);
+          input.value = '';
+        }
+      });
+      addRow.appendChild(plus);
+      addRow.appendChild(input);
+
+      sectionEl.appendChild(head);
+      sectionEl.appendChild(list);
+      sectionEl.appendChild(addRow);
+      container.appendChild(sectionEl);
+    });
+
+    totalsMeta.textContent = `${totalOpen} open · ${totalDone} done`;
+  }
+
+  addSectionBtn.addEventListener('click', () => {
+    addSection(newSectionInput.value);
+    newSectionInput.value = '';
+  });
+  newSectionInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      addSection(newSectionInput.value);
+      newSectionInput.value = '';
+    }
+  });
+
+  render();
+})();</script></body></html>
