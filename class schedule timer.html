@@ -141,52 +141,6 @@ h1#currentTime {
     margin: 0.1em 0;
 }
 
-/* --- CLOCK SYNC PANEL (time.is style) --- */
-#clockSync {
-    margin-top: 1.25em;
-    padding: 0.8em 1em;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--color-surface-secondary);
-    text-align: left;
-    font-size: 0.85em;
-    line-height: 1.55;
-}
-.clock-sync-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1em;
-}
-#clockSyncStatus {
-    font-weight: 600;
-}
-#clockSyncDetail {
-    color: var(--color-text-secondary);
-    font-size: 0.95em;
-    margin-top: 2px;
-}
-#clockSyncCheckNowBtn {
-    flex-shrink: 0;
-    background: none;
-    border: 1px solid var(--color-border);
-    color: var(--color-primary);
-    font-family: var(--font-family);
-    font-size: 0.9em;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, transform 0.1s;
-}
-#clockSyncCheckNowBtn:hover {
-    background-color: var(--color-primary);
-    color: #fff;
-}
-#clockSyncCheckNowBtn:active {
-    transform: scale(0.98);
-}
-
 /* --- SCHEDULE LIST --- */
 #schedule {
     margin-top: 2.5em;
@@ -455,15 +409,6 @@ h1#currentTime {
     <p id="statusMessage">Loading...</p>
     <div id="countdown">--:--:--</div>
 
-    <!-- CLOCK SYNC STATUS (time.is style) -->
-    <div id="clockSync" role="status" aria-live="polite">
-        <div class="clock-sync-top">
-            <span id="clockSyncStatus">⏱ Clock check pending…</span>
-            <button id="clockSyncCheckNowBtn" type="button" title="Re-measure the clock offset now">Check now</button>
-        </div>
-        <div id="clockSyncDetail"></div>
-    </div>
-
     <div id="settingsPanel">
         <h3>
             <span>Settings</span>
@@ -497,11 +442,11 @@ h1#currentTime {
         <fieldset>
             <legend>Time Offsets</legend>
             <label for="startOffsetInput">Class Start Offset (seconds):</label>
-            <input type="number" id="startOffsetInput" value="-55">
+            <input type="number" id="startOffsetInput" value=offset>
             <p class="description">Negative values make classes start earlier.</p>
 
-            <label for="endOffsetInput">Class End Offset (seconds):</label>
-            <input type="number" id="endOffsetInput" value="-55">
+            <label for="endOffsetInput">Class End Offset (seconds):</p>
+            <input type="number" id="endOffsetInput" value=offset>
             <p class="description">Negative values make classes end earlier.</p>
         </fieldset>
     </div>
@@ -560,9 +505,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTimeElem = document.getElementById('currentTime');
     const statusMessageElem = document.getElementById('statusMessage');
     const countdownElem = document.getElementById('countdown');
-    const clockSyncStatusElem = document.getElementById('clockSyncStatus');
-    const clockSyncDetailElem = document.getElementById('clockSyncDetail');
-    const clockSyncCheckBtn = document.getElementById('clockSyncCheckNowBtn');
     const scheduleTitleElem = document.getElementById('scheduleTitle');
     const scheduleListElem = document.getElementById('scheduleList');
     const settingsToggleBtn = document.getElementById('settingsToggle');
@@ -595,16 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let endOffsetMs = 0;
     let isMinimalMode = false; // NEW: State for minimal mode
 
-    // --- Clock sync state (time.is style) ---
-    let clockOffsetMs = 0;        // how far AHEAD the local clock runs, in ms (subtracted from Date.now())
-    let clockPrecisionMs = 0;     // ± (half round-trip time) of the offset estimate
-    let clockSource = '';         // which time source the last good sync used
-    let lastClockCheckAt = 0;     // local ms when the last good sync happened
-    let nextClockCheckAt = 0;     // local ms when the next check is scheduled
-    let clockCheckState = 'idle'; // idle | checking | ok | error
-    let clockCheckRunning = false;
-    let clockCheckTimer = null;
-
     // --- HELPER FUNCTIONS ---
     const formatTimeDifference = (ms) => {
         if (ms < 0) ms = 0;
@@ -614,8 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = totalSeconds % 60;
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
-    // Schedule boundaries are anchored to the clock-sync-adjusted "today"
-    const getDateForToday = (hour, minute) => new Date(getNow().setHours(hour, minute, 0, 0));
+    const getDateForToday = (hour, minute) => new Date(new Date().setHours(hour, minute, 0, 0));
     const format12Hour = (h, m) => new Date(2000, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
     // --- TOAST NOTIFICATION ---
@@ -753,215 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
         endOffsetMs = parseInt(endOffsetInput.value, 10) * 1000;
     }
 
-    // --- CLOCK SYNCHRONIZATION (time.is style) ---
-    // Every minute, fetch sub-second server time from several sources and estimate
-    // how far the local clock is off using the NTP midpoint method:
-    //     offset  = localMidpoint - serverTime   (> 0 → local clock runs fast)
-    //     ± precision = roundTripTime / 2
-    // Ten samples are fired in parallel per source and the one with the LOWEST
-    // round-trip time wins (its path is assumed to be the most symmetric / most
-    // precise). Target precision is ±50 ms or better — the same class of accuracy
-    // time.is reports (e.g. ±0.018 s).
-    const CLOCK_CHECK_INTERVAL_MS = 60 * 1000;
-    const CLOCK_SAMPLES_PER_SOURCE = 10;
-    const CLOCK_SAMPLE_TIMEOUT_MS = 8000;
-    const CLOCK_PRECISION_TARGET_MS = 50;
-    const CLOCK_SYNC_STORE_KEY = 'clockSyncState';
-    const CLOCK_STALE_MS = 15 * 60 * 1000;
-
-    // Some engines are picky about >3 fractional-second digits in ISO strings.
-    const normalizeIsoMs = (s) => s.replace(/(\.\d{3})\d+/, '$1');
-
-    function parseServerMsFromFields(json, fields) {
-        if (json && typeof json === 'object') {
-            for (const f of fields) {
-                const v = json[f];
-                if (v == null) continue;
-                if (typeof v === 'number') {
-                    if (v > 1e11) return Math.round(v);       // epoch milliseconds
-                    if (v > 1e8) return Math.round(v * 1000); // epoch seconds (fractional OK)
-                } else if (typeof v === 'string') {
-                    const t = Date.parse(normalizeIsoMs(v));
-                    if (!isNaN(t)) return t;
-                }
-            }
-        }
-        return null;
-    }
-
-    const TIME_SOURCES = [
-        {
-            // Preferred source — the same service whose "±0.018 seconds" sync this mimics.
-            // If its API is unavailable (e.g. blocked for this network), the fallbacks below are used.
-            name: 'time.is',
-            url: 'https://time.is/google.com',
-            headers: { 'Accept': 'application/json' },
-            parse: (json, text) => {
-                const ms = parseServerMsFromFields(json, ['now', 'now_utc', 'time', 'dateTime', 'timestamp']);
-                if (ms != null) return ms;
-                // Fallback: time.is embeds a fresh server time in its HTML as _tD(<epoch ms>)
-                const m = text && text.match(/_tD\((\d{13})\)/);
-                if (m) return parseInt(m[1], 10);
-                return null;
-            }
-        },
-        {
-            name: 'time.now',
-            url: 'https://time.now/developer/api/ip',
-            headers: { 'Accept': 'application/json' },
-            parse: (json) => parseServerMsFromFields(json, ['utc_datetime', 'datetime', 'now', 'dateTime'])
-        },
-        {
-            name: 'timeapi.io',
-            url: 'https://timeapi.io/api/Time/current/zone?timeZone=UTC',
-            headers: { 'Accept': 'application/json' },
-            parse: (json) => parseServerMsFromFields(json, ['dateTime', 'now', 'time'])
-        }
-    ];
-
-    const getNowMs = () => Date.now() - clockOffsetMs;
-    const getNow = () => new Date(getNowMs());
-
-    async function sampleClockSource(source) {
-        const t0 = Date.now();
-        const p0 = performance.now();
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), CLOCK_SAMPLE_TIMEOUT_MS);
-        try {
-            const resp = await fetch(source.url, {
-                method: 'GET',
-                cache: 'no-store',
-                headers: source.headers,
-                signal: controller.signal
-            });
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const text = await resp.text();
-            const p1 = performance.now();
-            const t1 = Date.now();
-            let json = null;
-            const trimmed = text.trim();
-            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-                try { json = JSON.parse(trimmed); } catch (e) { /* not JSON — raw parse will try */ }
-            }
-            const serverMs = source.parse(json, text);
-            if (serverMs == null) throw new Error('No server timestamp found in response');
-            if (Math.abs(serverMs - t1) > 15 * 60 * 1000) throw new Error('Server timestamp implausible (stale/cached)');
-            const rtt = p1 - p0;              // monotonic clock → immune to local clock steps
-            const localMid = t0 + rtt / 2;    // NTP-style midpoint of the exchange
-            return {
-                offset: localMid - serverMs,  // > 0 → local clock runs fast (ahead)
-                precision: rtt / 2,           // ± half of the round-trip time
-                rtt,
-                source: source.name
-            };
-        } finally {
-            clearTimeout(timer);
-        }
-    }
-
-    function describeOffset(offsetMs) {
-        const abs = Math.abs(offsetMs);
-        if (abs < 25) return 'in sync';
-        const mag = abs >= 1000 ? (abs / 1000).toFixed(2) + ' s' : Math.round(abs) + ' ms';
-        return mag + (offsetMs > 0 ? ' fast' : ' slow');
-    }
-
-    function describeAge(ms) {
-        const s = Math.floor(ms / 1000);
-        if (s < 60) return s + ' s';
-        const m = Math.floor(s / 60);
-        if (m < 60) return m + ' min';
-        return Math.floor(m / 60) + ' h';
-    }
-
-    function renderClockSync() {
-        if (!clockSyncStatusElem) return;
-        const systemTime = new Date().toLocaleTimeString('en-US');
-        let status = '';
-        let detail = '';
-        if (clockCheckState === 'checking') {
-            status = '⏱ Checking how far your clock is off…';
-            detail = clockSource
-                ? `previous: ${describeOffset(clockOffsetMs)} (±${clockPrecisionMs.toFixed(1)} ms) via ${clockSource}`
-                : 'contacting time.is, time.now and timeapi.io';
-        } else if (clockCheckState === 'ok') {
-            const withinTarget = clockPrecisionMs <= CLOCK_PRECISION_TARGET_MS;
-            status = `⏱ Your clock is ${describeOffset(clockOffsetMs)}`;
-            detail = `precision ±${clockPrecisionMs.toFixed(1)} ms ${withinTarget ? '✓' : '⚠'} (target ≤ ${CLOCK_PRECISION_TARGET_MS} ms) · checked ${new Date(lastClockCheckAt).toLocaleTimeString('en-US')} via ${clockSource} · next check in <span id="clockSyncNextIn">--</span> s · system time ${systemTime}`;
-        } else if (clockCheckState === 'error' && lastClockCheckAt) {
-            status = `⚠ Clock check failed — holding last sync from ${describeAge(Date.now() - lastClockCheckAt)} ago`;
-            detail = `last good result: ${describeOffset(clockOffsetMs)} (±${clockPrecisionMs.toFixed(1)} ms) via ${clockSource} · retrying every minute · system time ${systemTime}`;
-        } else if (clockCheckState === 'idle') {
-            status = '⏱ Clock check pending…';
-            detail = 'first check running · system time ' + systemTime;
-        } else {
-            status = '⚠ Clock check failed — using your system time';
-            detail = 'no network time available yet · retrying every minute · system time ' + systemTime;
-        }
-        clockSyncStatusElem.textContent = status;
-        clockSyncDetailElem.innerHTML = detail;
-    }
-
-    function restoreClockSync() {
-        // Apply the last measured offset right away (before the first fresh check completes)
-        try {
-            const raw = localStorage.getItem(CLOCK_SYNC_STORE_KEY);
-            if (!raw) return;
-            const s = JSON.parse(raw);
-            if (typeof s.offset === 'number' && isFinite(s.offset) &&
-                typeof s.at === 'number' && Date.now() - s.at < CLOCK_STALE_MS) {
-                clockOffsetMs = s.offset;
-                clockPrecisionMs = typeof s.precision === 'number' ? s.precision : 0;
-                clockSource = s.source || 'saved';
-                lastClockCheckAt = s.at;
-                clockCheckState = 'ok';
-            }
-        } catch (e) { /* ignore corrupt storage */ }
-    }
-
-    function scheduleNextClockCheck() {
-        if (clockCheckTimer) clearTimeout(clockCheckTimer);
-        nextClockCheckAt = Date.now() + CLOCK_CHECK_INTERVAL_MS;
-        clockCheckTimer = setTimeout(checkClock, CLOCK_CHECK_INTERVAL_MS);
-    }
-
-    async function checkClock() {
-        if (clockCheckRunning) return;
-        clockCheckRunning = true;
-        clockCheckState = 'checking';
-        renderClockSync();
-
-        // Fire CLOCK_SAMPLES_PER_SOURCE requests per source all at once, then keep
-        // the most precise reading (lowest round-trip time → tightest ± bound).
-        const jobs = [];
-        TIME_SOURCES.forEach(source => {
-            for (let i = 0; i < CLOCK_SAMPLES_PER_SOURCE; i++) jobs.push(sampleClockSource(source));
-        });
-        const settled = await Promise.allSettled(jobs);
-        const ok = settled.filter(r => r.status === 'fulfilled').map(r => r.value);
-        clockCheckRunning = false;
-
-        if (ok.length > 0) {
-            ok.sort((a, b) => a.rtt - b.rtt); // lowest RTT = most precise sample
-            const best = ok[0];
-            clockOffsetMs = best.offset;
-            clockPrecisionMs = best.precision;
-            clockSource = best.source;
-            lastClockCheckAt = Date.now();
-            clockCheckState = 'ok';
-            try {
-                localStorage.setItem(CLOCK_SYNC_STORE_KEY, JSON.stringify({
-                    offset: clockOffsetMs, precision: clockPrecisionMs, source: clockSource, at: lastClockCheckAt
-                }));
-            } catch (e) { /* storage unavailable (private mode) — not fatal */ }
-        } else {
-            clockCheckState = 'error'; // keep the last known offset (if any) so the timer stays adjusted
-        }
-        scheduleNextClockCheck();
-        renderClockSync();
-        updateDisplay(); // apply the new offset to the timer immediately
-    }
-
     // --- MAIN DISPLAY LOGIC ---
     function displaySchedule() {
         scheduleListElem.innerHTML = '';
@@ -978,8 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateDisplay() {
-        // Clock-sync-adjusted "now": the timer runs on corrected time
-        const now = getNow();
+        const now = new Date();
         const formattedCurrentTime = now.toLocaleTimeString('en-US');
         currentTimeElem.textContent = formattedCurrentTime; // Update main UI current time
 
@@ -1034,12 +755,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update main UI elements
         statusMessageElem.textContent = statusMessage;
         countdownElem.textContent = countdownText;
-
-        // Tick the "next clock check in" counter in the sync panel
-        if (clockCheckState === 'ok' || clockCheckState === 'error') {
-            const nextInSpan = document.getElementById('clockSyncNextIn');
-            if (nextInSpan) nextInSpan.textContent = String(Math.max(0, Math.ceil((nextClockCheckAt - Date.now()) / 1000)));
-        }
 
         // NEW: Update Minimal Mode Overlay elements if visible
         if (isMinimalMode) {
@@ -1096,23 +811,13 @@ document.addEventListener('DOMContentLoaded', () => {
     deletePresetBtn.addEventListener('click', deleteCurrentPreset);
     addPeriodBtn.addEventListener('click', () => addPeriodRowToEditor());
     applyScheduleChangesBtn.addEventListener('click', applyScheduleChanges);
-    // Clock sync: manual re-check button
-    clockSyncCheckBtn.addEventListener('click', checkClock);
 
     // --- INITIALIZATION ---
     loadOffsets();
     initializePresets();
-    restoreClockSync(); // apply the last measured offset before the first fresh check completes
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
     setInterval(updateDisplay, 100);
-    renderClockSync();
-    checkClock(); // immediate first check — reschedules itself every minute
-
-    // Browsers throttle timers in background tabs — re-sync as soon as the tab is visible again
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && Date.now() >= nextClockCheckAt - 5000) checkClock();
-    });
 });
 </script>
 
