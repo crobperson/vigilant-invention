@@ -527,31 +527,17 @@ h1#currentTime {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- DEFAULT CONFIGURATION ---
-    const HOMECOMING_SCHEDULE = {
-        name: 'Homecoming Schedule',
-        periods: [
-            { name: '1st Period', start: [8, 0], end: [8, 18] },
-            { name: '2nd Period', start: [8, 23], end: [8, 41] },
-            { name: '3rd Period', start: [8, 46], end: [9, 4] },
-            { name: '4th Period', start: [9, 9], end: [9, 27] },
-            { name: '5th Period', start: [9, 32], end: [9, 50] },
-            { name: '6th Period', start: [9, 55], end: [10, 13] },
-            { name: '7th Period', start: [10, 18], end: [10, 36] },
-            { name: '8th Period', start: [10, 41], end: [10, 59] },
-            { name: 'Assembly', start: [11, 15], end: [12, 30] }
-        ]
-    };
-    const REGULAR_SCHEDULE = {
-        name: 'Regular Schedule',
+    const DEFAULT_SCHEDULE = {
+        name: 'Default Schedule',
         periods: [
             { name: '1st Period', start: [8, 0], end: [8, 47] },
             { name: '2nd Period', start: [8, 52], end: [9, 49] },
             { name: '3rd Period', start: [9, 54], end: [10, 41] },
-            { name: '4th Period', start: [10, 46], end: [11, 33] },
-            { name: '5th Period', start: [11, 38], end: [12, 25] },
-            { name: '6th Period', start: [12, 30], end: [13, 17] },
-            { name: '7th Period', start: [13, 22], end: [14, 9] },
-            { name: '8th Period', start: [14, 14], end: [15, 1] }
+            { name: '4th Period', start: [10, 46],end: [11, 33] },
+            { name: '5th Period', start: [11, 38],end: [12, 25] },
+            { name: '6th Period', start: [12, 30],end: [13, 17] },
+            { name: '7th Period', start: [13, 22],end: [14, 9] },
+            { name: '8th Period', start: [14, 14],end: [15, 1] }
         ]
     };
     const LATE_START_SCHEDULE = {
@@ -567,8 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: '8th Period', start: [14, 35], end: [15, 5] }
         ]
     };
-    const DEFAULT_SCHEDULE = HOMECOMING_SCHEDULE;
-    const BUILT_IN_SCHEDULES = [ HOMECOMING_SCHEDULE, REGULAR_SCHEDULE, LATE_START_SCHEDULE ];
+    const BUILT_IN_SCHEDULES = [ DEFAULT_SCHEDULE, LATE_START_SCHEDULE ];
 
     // --- DOM ELEMENTS ---
     const appContainer = document.getElementById('container'); // Added for minimal mode
@@ -660,19 +645,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let userPresets = storedPresetsJson ? JSON.parse(storedPresetsJson) : {};
         schedulePresets = {};
         BUILT_IN_SCHEDULES.forEach(builtin => { schedulePresets[builtin.name] = builtin.periods; });
-        // Also support 'Default Schedule' alias mapping to Homecoming Schedule if needed
-        schedulePresets['Default Schedule'] = HOMECOMING_SCHEDULE.periods;
         Object.assign(schedulePresets, userPresets);
-        // Ensure Homecoming Schedule periods always match the latest built-in definition
-        schedulePresets[HOMECOMING_SCHEDULE.name] = HOMECOMING_SCHEDULE.periods;
         localStorage.setItem('schedulePresets', JSON.stringify(schedulePresets));
         populatePresetDropdown();
         const lastUsedPreset = localStorage.getItem('lastUsedPreset');
-        // Default directly to Homecoming Schedule unless user specifically selected another valid preset (excluding old Default Schedule)
-        const initialPreset = (lastUsedPreset && schedulePresets[lastUsedPreset] && lastUsedPreset !== 'Default Schedule') 
-            ? lastUsedPreset 
-            : HOMECOMING_SCHEDULE.name;
-        loadSchedule(initialPreset);
+        loadSchedule(lastUsedPreset && schedulePresets[lastUsedPreset] ? lastUsedPreset : DEFAULT_SCHEDULE.name);
     }
     function populatePresetDropdown() {
         presetSelect.innerHTML = '';
